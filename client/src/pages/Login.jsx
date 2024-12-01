@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaLock, FaEnvelope, FaShieldAlt } from 'react-icons/fa';  //inserts svg in the dynamiccode
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -24,11 +26,23 @@ const Login = () => {
     );
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+
     e.preventDefault();
-    login(formData);  // Call login function from context and set the user
-    navigate('/');    // Redirect to home page after login
-  };
+    try {
+      const {email, password } = formData; 
+        const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/login`, { email, password });
+        if (res.data.success) {
+            toast.success(res.data.message);
+            navigate('/');
+        } else {
+            toast.error(res.data.message, { position: "top-center" });
+        }
+    } catch (err) {
+        console.log(err);
+        toast.error("Something went wrong", { position: "top-center" });
+    }
+}
 
   const handleChange = (e) => {
     const { name, value } = e.target;
