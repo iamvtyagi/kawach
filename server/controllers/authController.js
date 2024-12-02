@@ -1,6 +1,10 @@
 import userModel from "../models/userModel.js";
 import { comparePassword, hashPassword } from "./../helper/authHelper.js";
 import JWT from "jsonwebtoken";
+import express from 'express';
+
+const app = express();
+app.use(express.json()); // Parse JSON data
 
 export const registerController = async (req, res) => {
   try {
@@ -46,7 +50,7 @@ export const registerController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Errro in Registeration",
+      message: "Error in Registeration",
       error,
     });
   }
@@ -73,7 +77,7 @@ export const loginController = async (req, res) => {
     }
     const match = await comparePassword(password, user.password);
     if (!match) {
-      return res.status(200).send({
+      return res.status(404).send({
         success: false,
         message: "Invalid Password",
       });
@@ -90,7 +94,7 @@ export const loginController = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        adddress: user.address,
+        address: user.address,
       },
       token,
     });
