@@ -7,7 +7,9 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import Animate from '../components/Animate';
 
+
 const Login = () => {
+  
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
@@ -34,8 +36,8 @@ const Login = () => {
       const {email, password } = formData; 
         const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/login`, { email, password });
         if (res.data.success) {
-            toast.success(res.data.message, { position: "top-center" });
-            navigate('/');
+            toast.success(res.data.message);
+            navigate('/dashboard');
         } else {
             toast.error(res.data.message, { position: "top-center" });
         }

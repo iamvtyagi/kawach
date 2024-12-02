@@ -36,7 +36,6 @@ const Signup = () => {
 
     try { 
       const { name, email, password, phone } = formData; 
-      // Use the environment variable for the API request
       const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/register`, { name, email, password, phone });
       if (res.data.success) {
         toast.success(res.data.message);
