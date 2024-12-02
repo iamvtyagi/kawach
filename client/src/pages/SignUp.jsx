@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import Animate from '../components/Animate';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -59,10 +60,7 @@ const Signup = () => {
 
   return (
     <div className="relative min-h-screen bg-black text-white flex items-center justify-center p-4 overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-cyan-600/20 to-blue-600/20 rounded-full blur-3xl -top-40 -left-40 animate-pulse"></div>
-      <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl -bottom-40 -right-40 animate-pulse delay-1000"></div>
-
+      <Animate />
       <div className="signup-card w-full max-w-md bg-gray-900/50 backdrop-blur-xl p-7 rounded-3xl border border-gray-800 relative z-10">
         <div className="text-center mb-6">
           <FaUser className="mx-auto h-11 w-11 text-cyan-500 mb-3" />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import { FaShieldAlt, FaLock, FaUserShield, FaFingerprint } from 'react-icons/fa';
+import Animate from '../components/Animate';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -30,10 +31,7 @@ const Home = () => {
     <div className="min-h-screen bg-black text-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl -top-40 -left-40 animate-pulse"></div>
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-cyan-600/20 to-blue-600/20 rounded-full blur-3xl -bottom-40 -right-40 animate-pulse delay-1000"></div>
-        
+        <Animate />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <FaShieldAlt className="mx-auto h-20 w-20 text-blue-500 mb-8 animate-float" />
