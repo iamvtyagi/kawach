@@ -79,7 +79,7 @@ If you have any questions, suggestions, or feedback, feel free to reach out to u
 
 - Email:
 - [rajsujal2004@gmail.com](rajsujal2004@gmail.com)
-- [vanshgii021@gmail.com](vanshjii021@gmail.com)
+- [vanshjii021@gmail.com](vanshjii021@gmail.com)
 - [ojhaaparna0@gmail.com](ojhaaparna0@gmail.com)
 - [ankitgupta23sep@gmail.com](ankitgupta23sep@gmail.com)
 
