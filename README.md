@@ -38,12 +38,12 @@ Once your document is saved on their system, there’s a risk that it could be s
 
 1. Clone the repository and navigate to the project directory.
 2. Backend Setup:
-   bash
+   ```bash
    cd server
    npm install
    npm start
 3. *Frontend Setup*:
-   bash
+   ```bash
    cd client
    npm install
    npm start
