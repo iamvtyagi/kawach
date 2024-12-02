@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaLock, FaEnvelope, FaUser, FaShieldAlt, FaKey } from 'react-icons/fa';
+import { FaLock, FaEnvelope, FaUser, FaPhone } from 'react-icons/fa';
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    phone: ''
   });
 
   useEffect(() => {
@@ -26,14 +28,25 @@ const Signup = () => {
     );
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
+    // login(formData);
+    // navigate('/');
+
+    try { 
+      const { name, email, password, phone } = formData; 
+      // Use the environment variable for the API request
+      const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/register`, { name, email, password, phone });
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate('/login');
+      } else {
+        toast.error(res.data.message, { position: "top-center" });
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong", { position: "top-center" });
     }
-    login(formData);
-    navigate('/');
   };
 
   const handleChange = (e) => {
@@ -52,7 +65,7 @@ const Signup = () => {
 
       <div className="signup-card w-full max-w-md bg-gray-900/50 backdrop-blur-xl p-7 rounded-3xl border border-gray-800 relative z-10">
         <div className="text-center mb-6">
-          <FaKey className="mx-auto h-11 w-11 text-cyan-500 mb-3" />
+          <FaUser className="mx-auto h-11 w-11 text-cyan-500 mb-3" />
           <h2 className="form-element text-2xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">
             Create Secure Account
           </h2>
@@ -109,45 +122,24 @@ const Signup = () => {
 
           <div className="form-element relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaKey className="text-gray-500" />
+              <FaPhone className="text-gray-500" />
             </div>
             <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
+              type="tel"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               className="w-full bg-gray-800/50 border border-gray-700 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-cyan-500 transition-colors"
-              placeholder="Confirm password"
+              placeholder="Phone number"
               required
             />
-          </div>
-
-          <div className="form-element">
-            <div className="flex items-center flex-between">
-              <input
-                id="terms"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-700 bg-gray-800/50 text-cyan-500 focus:ring-cyan-500"
-                required
-              />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-400">
-                I agree to the{' '}
-                <a href="#" className="text-cyan-400 hover:text-cyan-300">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="text-cyan-400 hover:text-cyan-300">
-                  Privacy Policy
-                </a>
-              </label>
-            </div>
           </div>
 
           <button
             type="submit"
             className="form-element w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
           >
-            <FaShieldAlt className="text-sm" />
+            <FaUser className="text-sm" />
             Create Secure Account
           </button>
         </form>
@@ -161,7 +153,7 @@ const Signup = () => {
 
         <div className="form-element mt-6 pt-4 border-t border-gray-800">
           <div className="flex items-center gap-2 justify-center text-sm text-gray-400">
-            <FaShieldAlt className="text-cyan-500" />
+            <FaUser className="text-cyan-500" />
             Protected by Kawach Security
           </div>
         </div>
