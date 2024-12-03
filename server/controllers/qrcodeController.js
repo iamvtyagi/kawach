@@ -1,36 +1,46 @@
 import QRCode from 'qrcode';
 import QRModel from '../models/qrModel.js';
+import crypto from 'crypto';
+import { uploadQRCode } from '../utils/cloudinary.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-export const generateQRCode = async (req, res) => {
+// Generate QR code from cloudinary URL
+export const  generateQRCode = async (fileId, fileUrl) => {  //fileId = file in database ka doc ka -id ha , fileUrl = cloudinary URL
     try {
-        const { fileId } = req.body; // Get the file ID from the request body
-        const qrData = `File ID: ${fileId}`; // Customize the QR code data as needed
-        console.log(`qrData : ${qrData}`);
-        // Generate the QR code
-        const qrCode = await QRCode.toDataURL(qrData);
+        // Set QR code directory path
+        const qrCodeDir = './public/qrcodes';
 
-        // Save the QR code to the database
+        // Generate unique filename
+        const uniqueId = crypto.randomBytes(12).toString('hex');
+        const qrCodePath = path.join(qrCodeDir, `qr_${uniqueId}.png`);
+
+        // Generate QR code
+        await QRCode.toFile(qrCodePath, fileUrl);
+        
+        // Upload QR code to cloudinary
+        const cloudinaryResponse = await uploadQRCode(qrCodePath);
+
+        // Save QR code to database
         const newQRCode = new QRModel({
-            fileId,
-            qrCode,
+            fileId,   // file in database ka doc ka -id ha
+            qrCode: cloudinaryResponse.url,   // qr code ka cloudinary url hai isiko client mai bejna hai qr display krana ka lia 
+            fileUrl    // isma original file ka cloudinary url hai
         });
- 
+
+        // Clean up the local file after successful upload
+        try {
+            await fs.unlink(qrCodePath);
+            console.log('Local QR code file cleaned up successfully');
+        } catch (unlinkError) {
+            console.error('Error cleaning up local QR code file:', unlinkError);
+            // Continue execution even if cleanup fails
+        }
 
         await newQRCode.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'QR Code generated successfully',
-            qrCode,
-        });
-        // const qr1Code = await QRCode.toDataURL(qrData);
-        // console.log(`Generated QR Code: ${qr1Code}`);
+        return cloudinaryResponse.url;
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error generating QR Code',
-            error,
-        });
+        console.error('Error generating QR code:', error);
+        throw error;
     }
 };

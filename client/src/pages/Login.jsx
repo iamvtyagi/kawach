@@ -35,7 +35,7 @@ const Login = () => {
         const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/login`, { email, password });
         if (res.data.success) {
             toast.success(res.data.message);
-            navigate('/');
+            navigate('/dashboard');
         } else {
             toast.error(res.data.message, { position: "top-center" });
         }
