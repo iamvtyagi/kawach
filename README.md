@@ -34,7 +34,7 @@ Once your document is saved on their system, there’s a risk that it could be s
 - MongoDB 🌱
 - Git 🧑‍💻
 
-### Installation
+### 🚀 Installation
 
 1. Clone the repository and navigate to the project directory.
 2. Backend Setup:
