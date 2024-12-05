@@ -1,4 +1,3 @@
-// package.json mei mene type modules set kiya hai thats why now i can use this import export system
 import express from 'express'
 import colors from 'colors'
 import dotenv from 'dotenv'
@@ -7,10 +6,15 @@ import connectDb from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import fileRoutes from './routes/fileRoutes.js';
 
+// Log environment variables (without sensitive data)
+console.log('Environment Variables Loaded:', {
+    PORT: process.env.PORT,
+    DEV_MODE: process.env.DEV_MODE,
+    MONGO_URL_EXISTS: !!process.env.MONGO_URL
+});
 
-//rest object
+// Rest object
 const app = express();
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,7 +47,6 @@ app.get("/", (req, res) => {
     message: "chal gya"
   })
 })
-
 
 const PORT = process.env.PORT || 8080;
 

@@ -7,7 +7,9 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import Animate from '../components/Animate';
 
+
 const Login = () => {
+  
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
