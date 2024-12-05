@@ -1,21 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [recentUploads, setRecentUploads] = useState([]);
+  const [uploadError, setUploadError] = useState(null);
 
-  // Mock data for recent uploads (replace with actual data from backend)
-  const recentUploads = [
-    { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
-    { id: 2, name: 'Contract.pdf', date: '2024-01-14', status: 'Expired' },
-    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active' },
-  ];
+  useEffect(() => {
+    console.log('Dashboard mounted, token:', token);
+    if (token) {
+      fetchRecentUploads();
+    } else {
+      console.log('No token available');
+    }
+  }, [token]);
+
+  useEffect(() => {
+    console.log('Recent uploads state:', recentUploads);
+  }, [recentUploads]);
+
+  const fetchRecentUploads = async () => {
+    try {
+      console.log('Fetching files with token:', token);
+      const response = await axios.get(`${import.meta.env.VITE_API}/api/v1/file`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      console.log('Files API Response:', response);
+      console.log('Files data:', response.data);
+      
+      if (response.data.success) {
+        console.log('Setting files:', response.data.data);
+        setRecentUploads(response.data.data || []);
+      } else {
+        console.log('API returned success: false');
+      }
+    } catch (error) {
+      console.error('Error fetching recent uploads:', error);
+      console.error('Error response:', error.response);
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/');
+      }
+    }
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -42,10 +80,47 @@ const Dashboard = () => {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    e.preventDefault();
     if (!selectedFile) return;
-    // Handle file upload logic here
-    navigate('/generate-qr');
+    
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      setUploadError(null);
+      console.log('Uploading file:', selectedFile.name);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API}/api/v1/files/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      console.log('Upload API Response:', response);
+      console.log('Upload data:', response.data);
+
+      if (response.data.success) {
+        toast.success('Document uploaded successfully');
+        setSelectedFile(null);
+        // Fetch files immediately after successful upload
+        await fetchRecentUploads();
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      console.error('Upload error response:', error.response);
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/');
+      } else {
+        setUploadError(error.response?.data?.message || 'Error uploading document');
+        toast.error('Error uploading document');
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -55,8 +130,7 @@ const Dashboard = () => {
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-black text-white">
-      
-     <Animate/> 
+      <Animate /> 
 
       {/* Navigation Bar */}
       <nav className="relative z-10 bg-gray-900/50 backdrop-blur-xl border-b border-gray-800">
@@ -85,100 +159,71 @@ const Dashboard = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upload Section */}
-        <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800 mb-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <FaUpload className="text-cyan-500" />
-            Upload Document
-          </h2>
-          <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center ${
-              dragActive ? 'border-cyan-500 bg-cyan-500/10' : 'border-gray-700'
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            {selectedFile ? (      // if file is selected run this
-              <div className="space-y-4">
-                <p className="text-cyan-500">Selected: {selectedFile.name}</p>
-                <button
-                  onClick={handleUpload}
-                  className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 rounded-lg hover:opacity-90 transition"
-                >
-                  Generate QR Code
-                </button>
-              </div>
-            ) : (   //if not selected run this
-              <>
-                <FaUpload className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-                <p className="text-gray-400 mb-4">
-                  Drag and drop your document here, or click to select
-                </p>
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="fileInput"
-                />
-                <label
-                  htmlFor="fileInput"
-                  className="bg-gray-800 px-6 py-3 rounded-lg hover:bg-gray-700 transition cursor-pointer"
-                >
-                  Select File
-                </label>
-              </>
+        <div className="bg-gray-900 rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Upload Document</h2>
+          <form onSubmit={handleUpload} className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+                className="flex-1 p-2 bg-gray-800 rounded text-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition"
+              >
+                Upload
+              </button>
+            </div>
+            {uploadError && (
+              <p className="text-red-500 text-sm">{uploadError}</p>
             )}
-
-          </div>
+          </form>
         </div>
 
         {/* Recent Uploads Section */}
-        <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <FaHistory className="text-cyan-500" />
-            Recent Uploads
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-4">Document Name</th>
-                  <th className="text-left py-4">Upload Date</th>
-                  <th className="text-left py-4">Status</th>
-                  <th className="text-left py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentUploads.map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-800">
-                    <td className="py-4">{doc.name}</td>
-                    <td className="py-4">{doc.date}</td>
+        <div className="bg-gray-900 rounded-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Uploads</h2>
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-gray-400">
+                <th className="pb-4">Name</th>
+                <th className="pb-4">Upload Date</th>
+                <th className="pb-4">Status</th>
+                <th className="pb-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentUploads && recentUploads.length > 0 ? (
+                recentUploads.map((doc) => (
+                  <tr key={doc._id} className="border-b border-gray-800">
+                    <td className="py-4">{doc.originalname || doc.filename}</td>
+                    <td className="py-4">{new Date(doc.createdAt || doc.uploadDate).toLocaleDateString()}</td>
                     <td className="py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          doc.status === 'Active'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {doc.status}
+                      <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">
+                        Active
                       </span>
                     </td>
                     <td className="py-4">
                       <button
-                        onClick={() => navigate('/generate-qr')}
+                        onClick={() => navigate('/generate-qr', { state: { fileId: doc._id } })}
                         className="flex items-center gap-2 text-cyan-500 hover:text-cyan-400 transition"
                       >
                         <FaQrcode />
-                        View QR
+                        Generate QR
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center text-gray-400">
+                    No files uploaded yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
