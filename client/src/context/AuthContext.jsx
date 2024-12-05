@@ -4,31 +4,24 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-
-  useEffect(() => {
-    // Check if token exists in localStorage on mount
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      // You might want to verify the token with the backend here
-    }
-  }, []);
+  const [fileId, setFileId] = useState(null);
 
   const login = (userData, token) => {
     setUser(userData);
-    setToken(token);
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', token);  // Save token to localStorage after getting from server
   };
+  
+  const setFile = (id) => { 
+    setFileId(id);
+  }
 
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
+    localStorage.removeItem('token');  // Remove token on logout
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, setFile, fileId }}>
       {children}
     </AuthContext.Provider>
   );

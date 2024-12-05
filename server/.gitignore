@@ -1,2 +1,19 @@
 .env
 node_modules
+
+# Temporary files and uploads
+/public/temp
+/public/qrcodes
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

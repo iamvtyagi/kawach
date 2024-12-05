@@ -8,123 +8,78 @@ import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [recentUploads, setRecentUploads] = useState([]);
-  const [uploadError, setUploadError] = useState(null);
+  const { user, logout, setFile } = useAuth();
+  const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
+  const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
 
-  useEffect(() => {
-    console.log('Dashboard mounted, token:', token);
-    if (token) {
-      fetchRecentUploads();
-    } else {
-      console.log('No token available');
-    }
-  }, [token]);
-
-  useEffect(() => {
-    console.log('Recent uploads state:', recentUploads);
-  }, [recentUploads]);
-
-  const fetchRecentUploads = async () => {
-    try {
-      console.log('Fetching files with token:', token);
-      const response = await axios.get(`${import.meta.env.VITE_API}/api/v1/file`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      console.log('Files API Response:', response);
-      console.log('Files data:', response.data);
-      
-      if (response.data.success) {
-        console.log('Setting files:', response.data.data);
-        setRecentUploads(response.data.data || []);
-      } else {
-        console.log('API returned success: false');
-      }
-    } catch (error) {
-      console.error('Error fetching recent uploads:', error);
-      console.error('Error response:', error.response);
-      if (error.response?.status === 401) {
-        logout();
-        navigate('/');
-      }
-    }
-  };
+  // Mock data for recent uploads (replace with actual data from backend API)
+  const recentUploads = [
+    { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
+    { id: 2, name: 'Contract.pdf', date: '2024-01-14', status: 'Expired' },
+    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active', },
+  ];
 
   const handleDrag = (e) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.stopPropagation();  // Prevents the event from continuing to propagate further through the DOM tree. It stops the event at the current element, preventing parent elements from being notified.
     if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
+      setDragActive(true);    //// Visually indicate the drop area is active
     } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
+      await handleUpload(file);  // Pass the file directly
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      await handleUpload(file);  // Pass the file directly
     }
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-    
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
+  const handleUpload = async (file) => {
     try {
-      setUploadError(null);
-      console.log('Uploading file:', selectedFile.name);
-      const response = await axios.post(
-        `${import.meta.env.VITE_API}/api/v1/files/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
+      console.log('Upload started, file:', file);
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      console.log('FormData created with file');
+
+
+      const res = await axios.post('/api/v1/file/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      );
+      });
+      console.log('Upload response:', res.data);
+      setFile(res.data.fileId);
 
-      console.log('Upload API Response:', response);
-      console.log('Upload data:', response.data);
-
-      if (response.data.success) {
-        toast.success('Document uploaded successfully');
-        setSelectedFile(null);
-        // Fetch files immediately after successful upload
-        await fetchRecentUploads();
+      if (res.data.success) {
+        toast.success('File uploaded successfully');
+      } else {
+        toast.error(res.data.message);
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      console.error('Upload error response:', error.response);
-      if (error.response?.status === 401) {
-        logout();
-        navigate('/');
-      } else {
-        setUploadError(error.response?.data?.message || 'Error uploading document');
-        toast.error('Error uploading document');
-      }
+      console.error('Upload error details:', error.response?.data || error.message);
+      toast.error('Error uploading file');
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = () => {    
+    logout();          // token is removed from localstorage 
     navigate('/');
   };
 
@@ -159,24 +114,51 @@ const Dashboard = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upload Section */}
-        <div className="bg-gray-900 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Upload Document</h2>
-          <form onSubmit={handleUpload} className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
-                className="flex-1 p-2 bg-gray-800 rounded text-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition"
-              >
-                Upload
-              </button>
-            </div>
-            {uploadError && (
-              <p className="text-red-500 text-sm">{uploadError}</p>
+        <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800 mb-8">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <FaUpload className="text-cyan-500" />
+            Upload Document
+          </h2>
+          <div
+            className={`border-2 border-dashed rounded-xl p-8 text-center ${
+              dragActive ? 'border-cyan-500 bg-cyan-500/10' : 'border-gray-700'
+            }`}
+            // are part of HTML5's native Drag and Drop API.
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            {selectedFile ? (      // if file is selected run this
+              <div className="space-y-4">
+                <p className="text-cyan-500">Selected: {selectedFile.name}</p>
+                <button
+                  onClick= {() => navigate('/generate-qr')}
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 rounded-lg hover:opacity-90 transition"
+                >
+                  Generate QR Code
+                </button>
+              </div>
+            ) : (   //if not selected run this
+              <>
+                <FaUpload className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                <p className="text-gray-400 mb-4">
+                  Drag and drop your document here, or click to select
+                </p>
+                <input
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="fileInput"
+                  name="file"
+                />
+                <label
+                  htmlFor="fileInput"
+                  className="bg-gray-800 px-6 py-3 rounded-lg hover:bg-gray-700 transition cursor-pointer"
+                >
+                  Select File
+                </label>
+              </>
             )}
           </form>
         </div>

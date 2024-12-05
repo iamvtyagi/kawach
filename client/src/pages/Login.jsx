@@ -32,15 +32,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { email, password } = formData;
-      const res = await axios.post(`${import.meta.env.VITE_API}/api/v1/auth/login`, { email, password });
-      if (res.data.success) {
-        toast.success(res.data.message);
-        login(res.data.user, res.data.token); // Pass both user data and token
-        navigate('/dashboard');
-      } else {
-        toast.error(res.data.message, { position: "top-center" });
-      }
+      const {email, password } = formData; 
+        const res = await axios.post('/api/v1/auth/login', { email, password });
+        if (res.data.success) {  
+            toast.success(res.data.message);
+            login(res.data.user, res.data.token);  // res.send ma backened ma -> user and token send kiya ha
+            navigate('/dashboard');
+        } else {
+            toast.error(res.data.message, { position: "top-center" });
+        }
     } catch (err) {
       console.log(err);
       toast.error("Something went wrong", { position: "top-center" });

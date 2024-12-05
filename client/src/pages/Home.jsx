@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import { FaShieldAlt, FaLock, FaUserShield, FaFingerprint } from 'react-icons/fa';
 import Animate from '../components/Animate';
+import logo from '../assets/logo.svg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -11,9 +12,19 @@ const Home = () => {
 
   useEffect(() => {
     const tl = gsap.timeline();
+    tl.fromTo('.logo-container',
+      { y: -50, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }
+    );
+    tl.fromTo('.project-title',
+      { x: -30, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+      '-=0.5'
+    );
     tl.fromTo('.hero-text', 
       { y: 100, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, stagger: 0.2, ease: 'power3.out' }
+      { y: 0, opacity: 1, duration: 0.7, stagger: 0.2, ease: 'power3.out' },
+      '-=0.5'
     );
     tl.fromTo('.feature-card', 
       { y: 50, opacity: 0 },
@@ -29,12 +40,21 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Logo and Project Name */}
+      <div className="flex items-center px-8 py-6">
+        <div className="flex items-center space-x-3">
+          <img src={logo} alt="Kawach Logo" className="w-12 h-12 logo-container" />
+          <h1 className="project-title text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400">
+            KAWACH
+          </h1>
+        </div>
+      </div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <Animate />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
-            <FaShieldAlt className="mx-auto h-20 w-20 text-blue-500 mb-8 animate-float" />
+            <FaShieldAlt className="hero-text mx-auto h-20 w-20 text-blue-500 mb-8 animate-float" />
             <h1 className="hero-text text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 text-transparent bg-clip-text">
               Secure Your Digital World
             </h1>
