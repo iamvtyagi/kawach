@@ -59,7 +59,7 @@ export const registerController = async (req, res) => {
 //POST LOGIN
 export const loginController = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body;  // client ma jo axios.post ka sath email password send kiya ha wo req.body ma mil jayga
     //validation
     if (!email || !password) {
       return res.status(404).send({
@@ -83,14 +83,14 @@ export const loginController = async (req, res) => {
       });
     }
     //token
-    const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "2h",
     });
     res.status(200).send({
       success: true,
       message: "login successfully",
       user: {
-        _id: user._id,
+        _id: user._id,   // actual user id
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -111,7 +111,7 @@ export const loginController = async (req, res) => {
 
 // test controller 
 
-  export const testControllerm = (req,res)=>{
-      console.log('protected router')
-      res.send("protected route")
+  export const testController = (req,res)=>{
+      console.log('protected router',req.user)
+      res.send("protected route");
   }

@@ -3,53 +3,83 @@ import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
+  const { user, logout, setFile } = useAuth();
+  const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
+  const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
 
-  // Mock data for recent uploads (replace with actual data from backend)
+  // Mock data for recent uploads (replace with actual data from backend API)
   const recentUploads = [
     { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
     { id: 2, name: 'Contract.pdf', date: '2024-01-14', status: 'Expired' },
-    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active' },
+    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active', },
   ];
 
   const handleDrag = (e) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.stopPropagation();  // Prevents the event from continuing to propagate further through the DOM tree. It stops the event at the current element, preventing parent elements from being notified.
     if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
+      setDragActive(true);    //// Visually indicate the drop area is active
     } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
+      await handleUpload(file);  // Pass the file directly
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      await handleUpload(file);  // Pass the file directly
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-    // Handle file upload logic here
-    navigate('/generate-qr');
+  const handleUpload = async (file) => {
+    try {
+      console.log('Upload started, file:', file);
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      console.log('FormData created with file');
+
+
+      const res = await axios.post('/api/v1/file/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log('Upload response:', res.data);
+      setFile(res.data.fileId);
+
+      if (res.data.success) {
+        toast.success('File uploaded successfully');
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      console.error('Upload error details:', error.response?.data || error.message);
+      toast.error('Error uploading file');
+    }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = () => {    
+    logout();          // token is removed from localstorage 
     navigate('/');
   };
 
@@ -94,6 +124,7 @@ const Dashboard = () => {
             className={`border-2 border-dashed rounded-xl p-8 text-center ${
               dragActive ? 'border-cyan-500 bg-cyan-500/10' : 'border-gray-700'
             }`}
+            // are part of HTML5's native Drag and Drop API.
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -103,7 +134,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <p className="text-cyan-500">Selected: {selectedFile.name}</p>
                 <button
-                  onClick={handleUpload}
+                  onClick= {() => navigate('/generate-qr')}
                   className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 rounded-lg hover:opacity-90 transition"
                 >
                   Generate QR Code
@@ -120,6 +151,7 @@ const Dashboard = () => {
                   onChange={handleFileSelect}
                   className="hidden"
                   id="fileInput"
+                  name="file"
                 />
                 <label
                   htmlFor="fileInput"

@@ -3,44 +3,54 @@ import { useNavigate } from 'react-router-dom';
 import { FaLock, FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
+import axios from 'axios';
 
 const GenerateQR = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, fileId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrGenerated, setQrGenerated] = useState(false);
-
-  // Mock data (replace with actual data from your backend)
-  const documentInfo = {
-    name: 'R295G93ApplicationForm.pdf',
-    uploadDate: '11/10/2024',
-    status: 'Active'
-  };
+  const [qrCode, setQrCode] = useState(null);
+  const [documentInfo, setDocumentInfo] = useState(null);
 
   const generateQRCode = async () => {
     try {
       setLoading(true);
       setError(null);
-      // TODO: API call to generate QR code
-      // const response = await fetch('YOUR_API_ENDPOINT', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      //   },
-      // });
-      // const data = await response.json();
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!fileId) {
+        setError('No file selected. Please upload a file first.');
+        return;
+      }
+
+      const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!res.data.success) {
+        throw new Error(res.data.message);
+      }
+
+      const { qrCode, fileName, uploadDate } = res.data;
+      
+      setQrCode(qrCode);
+      setDocumentInfo({
+        name: fileName,
+        uploadDate: new Date(uploadDate).toLocaleDateString(),  
+        status: 'Active'
+      });
       setQrGenerated(true);
     } catch (err) {
-      setError('Failed to generate QR code. Please try again.');
+      setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
       console.error('QR Generation Error:', err);
     } finally {
-      setLoading(false);
+      setLoading(false);   // after qr code is generated set loading false
     }
   };
+  
 
   const handleDelete = async () => {
     // TODO: Implement delete functionality
@@ -67,17 +77,17 @@ const GenerateQR = () => {
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
         <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800">
           {/* Document Title */}
-          <h1 className="text-2xl font-bold mb-6">{documentInfo.name}</h1>
+          <h1 className="text-2xl font-bold mb-6">{documentInfo?.name}</h1>
 
           {/* Document Info */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
               <p className="text-gray-400">Upload Date</p>
-              <p>{documentInfo.uploadDate}</p>
+              <p>{documentInfo?.uploadDate}</p>
             </div>
             <div>
               <p className="text-gray-400">Status</p>
-              <p className="text-green-400">{documentInfo.status}</p>
+              <p className="text-green-400">{documentInfo?.status}</p>
             </div>
           </div>
 
@@ -89,7 +99,7 @@ const GenerateQR = () => {
               <div className="bg-white p-8 rounded-lg mb-4">
                 {/* QR Code will be displayed here */}
                 <div className="w-full h-48 bg-gray-200 rounded flex items-center justify-center">
-                  <span className="text-black">QR Code</span>
+                  <img src={qrCode} alt="Generated QR Code" className="max-w-full max-h-full" />
                 </div>
               </div>
             ) : (

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --logo-color: #4F46E5;
+      --logo-opacity-low: 0.1;
+      --logo-opacity-medium: 0.2;
+      --logo-opacity-high: 0.3;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --logo-color: #818CF8;
+        --logo-opacity-low: 0.2;
+        --logo-opacity-medium: 0.4;
+        --logo-opacity-high: 0.6;
+      }
+    }
+  </style>
+  
+  <!-- Background shield shape -->
+  <path d="M100 10 L180 50 L180 120 C180 160 100 190 100 190 C100 190 20 160 20 120 L20 50 Z" 
+        fill="none" 
+        stroke="var(--logo-color)" 
+        stroke-width="4">
+    <animate attributeName="stroke-dasharray" 
+             from="1000 1000" 
+             to="0 1000" 
+             dur="3s" 
+             repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Inner shield design -->
+  <path d="M100 30 L160 60 L160 110 C160 140 100 165 100 165 C100 165 40 140 40 110 L40 60 Z" 
+        fill="var(--logo-color)" 
+        opacity="var(--logo-opacity-low)">
+    <animate attributeName="opacity" 
+             values="var(--logo-opacity-low);var(--logo-opacity-high);var(--logo-opacity-low)" 
+             dur="2s" 
+             repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Central K letter -->
+  <path d="M85 60 L85 140 M85 100 L115 60 M85 100 L115 140" 
+        stroke="var(--logo-color)" 
+        stroke-width="8" 
+        stroke-linecap="round" 
+        fill="none">
+    <animate attributeName="stroke-dasharray" 
+             from="500" 
+             to="0" 
+             dur="2s" 
+             repeatCount="1"/>
+  </path>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="45" 
+          stroke="var(--logo-color)" 
+          stroke-width="2" 
+          fill="none" 
+          opacity="var(--logo-opacity-high)">
+    <animate attributeName="r" 
+             values="45;48;45" 
+             dur="2s" 
+             repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Pulse effect -->
+  <circle cx="100" cy="100" r="35" 
+          stroke="var(--logo-color)" 
+          stroke-width="1" 
+          fill="none" 
+          opacity="var(--logo-opacity-medium)">
+    <animate attributeName="r" 
+             values="35;40;35" 
+             dur="1.5s" 
+             repeatCount="indefinite"/>
+  </circle>
+</svg>
