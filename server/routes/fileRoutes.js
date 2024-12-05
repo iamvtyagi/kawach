@@ -1,16 +1,20 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/multer.js';
-import FileModel from '../models/fileModel.js';
+import QRModel from '../models/qrModel.js';
 import { uploadFileOnCloudinary } from '../utils/cloudinary.js';
 import { generateQRCode } from '../controllers/qrcodeController.js';
 import fs from 'fs/promises';
+import FileModel from '../models/fileModel.js'; // Added missing import
 
 const router = Router();
 
 // File Upload Route
 router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
     try {
+        console.log('Request reached file upload route');
+        console.log('User:', req.user?._id);
+        
         // Upload to Cloudinary
         const cloudinaryResponse = await uploadFileOnCloudinary(req.file.path);
 
@@ -41,8 +45,7 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         res.status(200).send({
             success: true,
             message: "File uploaded successfully",
-            cloudinaryUrl: cloudinaryResponse.url,
-            qrCode: qrCode  // qr code cloudinary url
+            fileId: newFile._id,
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -54,19 +57,46 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
     }
 });
 
-// File Fetch Route
-router.get('/file/:id', async (req, res) => {
+// QR Code Fetch Route
+router.get('/qrcode/:fileId', isAuthenticated, async (req, res) => {
     try {
-        const fileId = req.params.id;
-        const file = await FileModel.findById(fileId);
+        const { fileId } = req.params;
+        const userId = req.user._id; // Get user ID from auth middleware
 
+        // First verify if the file belongs to the user
+        const file = await FileModel.findOne({ 
+            _id: fileId,
+            user: userId 
+        });
+        
         if (!file) {
-            return res.status(404).json({ success: false, message: 'File not found' });
+            return res.status(404).send({ 
+                success: false, 
+                message: 'File not found or unauthorized' 
+            });
         }
 
-        res.status(200).json({ success: true, file });
+        // Get the QR code for this specific file
+        const qrCode = await QRModel.findOne({ fileId: file._id });
+        if (!qrCode) {
+            return res.status(404).send({
+                success: false,
+                message: 'QR code not found for this file'
+            });
+        }
+        res.status(200).send({
+            success: true,
+            qrCode: qrCode.qrCode,
+            fileName: file.filename,
+            uploadDate: file.uploadDate
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error fetching file', error });
+        console.error('QR Code fetch error:', error);
+        res.status(500).send({
+            success: false,
+            message: 'Error fetching QR code',
+            error: error.message
+        });
     }
 });
 

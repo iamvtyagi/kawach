@@ -17,6 +17,7 @@ export const uploadFileOnCloudinary = async (localFilePath) => {  //localFilePat
         if (!localFilePath) throw new Error('File path is required');
         // Upload file on cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
+            folder: "uploads",
             resource_type: "auto"  //auto detect the file type
         })
         //file has been uploaded successfully
@@ -40,7 +41,7 @@ export const uploadQRCode = async (localFilePath) => {
     try {
       const response = await cloudinary.uploader.upload(localFilePath, {
         folder: 'qr_codes',  // Specify folder
-        resource_type: 'image',  // QR codes are images
+        resource_type: 'auto', 
       });
       console.log('QR Code uploaded successfully:', response.url);
       return response;
@@ -49,3 +50,25 @@ export const uploadQRCode = async (localFilePath) => {
       throw err;
     }
   };
+
+// Delete file from Cloudinary
+export const deleteFileFromCloudinary = async (publicId) => {
+    try {
+        if (!publicId) throw new Error('Public ID is required');
+        
+        // Delete the file from Cloudinary
+        const result = await cloudinary.uploader.destroy(publicId, {
+            resource_type: "auto"  // auto detect the resource type (image, video, raw)
+        });
+
+        if (result.result === 'ok') {
+            console.log('File deleted successfully from Cloudinary');
+            return { success: true, message: 'File deleted successfully' };
+        } else {
+            throw new Error('Failed to delete file from Cloudinary');
+        }
+    } catch (error) {
+        console.error('Error deleting file from Cloudinary:', error);
+        throw error;
+    }
+};

@@ -5,11 +5,10 @@ import dotenv from 'dotenv'
 import morgan from 'morgan'
 import connectDb from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
-import cors from 'cors'
 import FileModel from './models/fileModel.js'; 
 import fileRoutes from './routes/fileRoutes.js';
 import upload  from './middlewares/multer.js'
-
+import cors from 'cors'
 
 
 //rest object
@@ -30,14 +29,13 @@ connectDb();
 
 
 //middlewares
-app.use(cors())
 app.use(express.json());
 app.use(morgan('dev'))
 
 
 //routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/files", fileRoutes); // routes for file operations (upload, fetch, and QR generation)
+app.use("/api/v1/file", fileRoutes); // routes for file operations (upload, fetch, and QR generation)
 
 
 //testing ka liya bna hai

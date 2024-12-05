@@ -59,7 +59,7 @@ export const registerController = async (req, res) => {
 //POST LOGIN
 export const loginController = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body;  // client ma jo axios.post ka sath email password send kiya ha wo req.body ma mil jayga
     //validation
     if (!email || !password) {
       return res.status(404).send({
@@ -90,7 +90,7 @@ export const loginController = async (req, res) => {
       success: true,
       message: "login successfully",
       user: {
-        _id: user._id,
+        _id: user._id,   // actual user id
         name: user.name,
         email: user.email,
         phone: user.phone,
