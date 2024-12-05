@@ -139,3 +139,4 @@ const GenerateQR = () => {
 };
 
 export default GenerateQR;
+``
