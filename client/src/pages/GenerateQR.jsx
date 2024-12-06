@@ -9,7 +9,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const GenerateQR = () => {
   const navigate = useNavigate();
-  const { user, fileId } = useAuth();
+  const { user, fileId, addUpload } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrGenerated, setQrGenerated] = useState(false);
@@ -32,7 +32,7 @@ const GenerateQR = () => {
         setQrCode(null);
       }
        // Simulate API delay
-       await new Promise(resolve => setTimeout(resolve, 10000));    // abhi ya pause ha bec kuch or chl rha hai
+       await new Promise(resolve => setTimeout(resolve, 9000));    // abhi ya pause ha bec kuch or chl rha hai
 
       //fetch qr code
       const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
@@ -49,13 +49,23 @@ const GenerateQR = () => {
 
       // Set the new QR code
       setQrCode(qrCode);
-      setDocumentInfo({
+      const docInfo = {
         name: fileName,
-        uploadDate: new Date(uploadDate).toLocaleDateString(),
+        date: new Date(uploadDate).toLocaleDateString(),
         status: 'Active'
-      });
+      };
+      setDocumentInfo(docInfo);
+      
+      // Add to recent uploads
+      addUpload(docInfo);
 
       setQrGenerated(true);
+
+      // After successful QR generation, navigate back to dashboard
+      toast.success('QR Code generated successfully!');
+      setTimeout(() => {
+        navigate('/dashboard');  // This will trigger a fresh fetch of recent uploads
+      }, 2000);
 
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
@@ -163,7 +173,7 @@ const GenerateQR = () => {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
               <p className="text-gray-400">Upload Date</p>
-              <p>{documentInfo?.uploadDate}</p>
+              <p>{documentInfo?.date}</p>
             </div>
             <div>
               <p className="text-gray-400">Status</p>

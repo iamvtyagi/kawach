@@ -49,6 +49,35 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
     }
 });
 
+// Get Recent Uploads Route
+router.get('/recent-uploads', isAuthenticated, async (req, res) => {
+    try {
+        const uploads = await FileModel.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('filename createdAt');
+
+        const formattedUploads = uploads.map(upload => ({
+            id: upload._id,
+            name: upload.filename,
+            date: new Date(upload.createdAt).toLocaleDateString(),
+            status: 'Active'  // You can modify this based on your requirements
+        }));
+
+        res.status(200).json({
+            success: true,
+            uploads: formattedUploads
+        });
+    } catch (error) {
+        console.error('Error fetching recent uploads:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching recent uploads',
+            error: error.message
+        });
+    }
+});
+
 // QR Code Fetch Route
 router.get('/qrcode/:fileId', isAuthenticated, async (req, res) => {
     try {

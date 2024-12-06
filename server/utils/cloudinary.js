@@ -27,21 +27,6 @@ export const uploadFileOnCloudinary = async (file) => {
     }
 }
 
-// Upload QR Code to the 'qr_codes' folder
-export const uploadQRCode = async (localFilePath) => {
-    try {
-      const response = await cloudinary.uploader.upload(localFilePath, {
-        folder: 'qr_codes',  // Specify folder
-        resource_type: 'auto', 
-      });
-      console.log('QR Code uploaded successfully:', response.url);
-      return response;
-    } catch (err) {
-      console.error('Error uploading QR code:', err);
-      throw err;
-    }
-  };
-
 // Upload QR Code buffer to cloudinary directly
 export const uploadQRCodeBuffer = async (buffer) => {
     try {

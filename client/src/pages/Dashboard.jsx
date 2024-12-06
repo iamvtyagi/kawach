@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -11,13 +11,28 @@ const Dashboard = () => {
   const { user, logout, setFile } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
   const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
+  const [recentUploads, setRecentUploads] = useState([]);
 
-  // Mock data for recent uploads (replace with actual data from backend API)
-  const recentUploads = [
-    { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
-    { id: 2, name: 'Contract.pdf', date: '2024-01-14', status: 'Expired' },
-    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active', },
-  ];
+  // Fetch recent uploads when component mounts
+  useEffect(() => {
+    const fetchRecentUploads = async () => {
+      try {
+        const res = await axios.get('/api/v1/file/recent-uploads', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (res.data.success) {
+          setRecentUploads(res.data.uploads);
+        }
+      } catch (error) {
+        console.error('Error fetching recent uploads:', error);
+        toast.error('Failed to fetch recent uploads');
+      }
+    };
+
+    fetchRecentUploads();
+  }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
