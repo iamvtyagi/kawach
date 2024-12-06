@@ -160,7 +160,7 @@ const Dashboard = () => {
                 </label>
               </>
             )}
-          </form>
+          </div>
         </div>
 
         {/* Recent Uploads Section */}

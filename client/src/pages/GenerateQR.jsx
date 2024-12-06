@@ -165,11 +165,10 @@ const GenerateQR = () => {
           <div className="text-center">
             <p className="text-gray-400">Loading...</p>
           </div>
-        )}
+        )
       </div>
     </div>
   );
 };
 
 export default GenerateQR;
-``
