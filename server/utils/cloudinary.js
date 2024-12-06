@@ -8,14 +8,21 @@ dotenv.config();
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    api_secret: process.env.CLOUDINARY_API_SECRET                   
 });
 
 // Upload Document to the 'documents' folder
 export const uploadFileOnCloudinary = async (localFilePath) => {  //localFilePath -> from multer
+    // The localFilePath is passed as an argument to this function. This path is expected to be the path of the file
+    // that needs to be uploaded to Cloudinary. This path is likely obtained from a file upload process, such as
+    // using the multer middleware in Express.js to handle multipart/form-data requests.
     try {
         if (!localFilePath) throw new Error('File path is required');
         // Upload file on cloudinary
+        // This line initiates the upload process to Cloudinary. It takes the localFilePath as the first argument, 
+        // which is the path to the file on the local machine that needs to be uploaded. The second argument is an 
+        // options object that can be used to specify various settings for the upload, such as the folder where the 
+        // file should be stored, the type of resource being uploaded, and more.
         const response = await cloudinary.uploader.upload(localFilePath, {
             folder: "uploads",
             resource_type: "auto"  //auto detect the file type
@@ -41,7 +48,7 @@ export const uploadQRCode = async (localFilePath) => {
     try {
       const response = await cloudinary.uploader.upload(localFilePath, {
         folder: 'qr_codes',  // Specify folder
-        resource_type: 'auto', 
+        resource_type: 'auto',
       });
       console.log('QR Code uploaded successfully:', response.url);
       return response;

@@ -13,7 +13,9 @@ const router = Router();
 router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
     try {
         console.log('Request reached file upload route');
-        console.log('User:', req.user?._id);
+        // This line logs the ID of the currently authenticated user to the console, 
+        // using optional chaining (?.) to avoid errors if req.user is null or undefined.
+        console.log('User ID:', req.user?._id);
         
         // Upload to Cloudinary
         const cloudinaryResponse = await uploadFileOnCloudinary(req.file.path);

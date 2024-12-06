@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -85,8 +85,7 @@ const Dashboard = () => {
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-black text-white">
-      
-     <Animate/> 
+      <Animate /> 
 
       {/* Navigation Bar */}
       <nav className="relative z-10 bg-gray-900/50 backdrop-blur-xl border-b border-gray-800">
@@ -161,56 +160,52 @@ const Dashboard = () => {
                 </label>
               </>
             )}
-
           </div>
         </div>
 
         {/* Recent Uploads Section */}
-        <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-800">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <FaHistory className="text-cyan-500" />
-            Recent Uploads
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-4">Document Name</th>
-                  <th className="text-left py-4">Upload Date</th>
-                  <th className="text-left py-4">Status</th>
-                  <th className="text-left py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentUploads.map((doc) => (
-                  <tr key={doc.id} className="border-b border-gray-800">
-                    <td className="py-4">{doc.name}</td>
-                    <td className="py-4">{doc.date}</td>
+        <div className="bg-gray-900 rounded-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Uploads</h2>
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-gray-400">
+                <th className="pb-4">Name</th>
+                <th className="pb-4">Upload Date</th>
+                <th className="pb-4">Status</th>
+                <th className="pb-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentUploads && recentUploads.length > 0 ? (
+                recentUploads.map((doc) => (
+                  <tr key={doc._id} className="border-b border-gray-800">
+                    <td className="py-4">{doc.originalname || doc.filename}</td>
+                    <td className="py-4">{new Date(doc.createdAt || doc.uploadDate).toLocaleDateString()}</td>
                     <td className="py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          doc.status === 'Active'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                        }`}
-                      >
-                        {doc.status}
+                      <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">
+                        Active
                       </span>
                     </td>
                     <td className="py-4">
                       <button
-                        onClick={() => navigate('/generate-qr')}
+                        onClick={() => navigate('/generate-qr', { state: { fileId: doc._id } })}
                         className="flex items-center gap-2 text-cyan-500 hover:text-cyan-400 transition"
                       >
                         <FaQrcode />
-                        View QR
+                        Generate QR
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center text-gray-400">
+                    No files uploaded yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

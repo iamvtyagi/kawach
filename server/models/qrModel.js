@@ -19,7 +19,7 @@ const qrSchema = new mongoose.Schema({
     qrCode: {
         type: String,  //coludinary url
         required: true,
-    },
+    },      
     
     // fileUrl: This field is used to store the URL of the file associated with the QR code.
     // We have added this field to store the URL of the file.

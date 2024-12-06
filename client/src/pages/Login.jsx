@@ -30,7 +30,6 @@ const Login = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     try {
       const {email, password } = formData; 
@@ -43,10 +42,10 @@ const Login = () => {
             toast.error(res.data.message, { position: "top-center" });
         }
     } catch (err) {
-        console.log(err);
-        toast.error("Something went wrong", { position: "top-center" });
+      console.log(err);
+      toast.error("Something went wrong", { position: "top-center" });
     }
-}
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
