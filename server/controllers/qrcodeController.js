@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 // Generate QR code from cloudinary URL
-export const  generateQRCode = async (fileId, fileUrl) => {  //fileId = file in database ka doc ka -id ha , fileUrl = cloudinary URL
+export const generateQRCode = async (fileId, fileUrl) => {  //fileId = file in database ka doc ka -id ha , fileUrl = cloudinary URL
     try {
         // Set QR code directory path
         const qrCodeDir = './public/qrcodes';
@@ -15,8 +15,12 @@ export const  generateQRCode = async (fileId, fileUrl) => {  //fileId = file in 
         const uniqueId = crypto.randomBytes(12).toString('hex');
         const qrCodePath = path.join(qrCodeDir, `qr_${uniqueId}.png`);
 
-        // Generate QR code
-        await QRCode.toFile(qrCodePath, fileUrl);
+        // Create print URL (using server endpoint)
+        const serverUrl = process.env.SERVER_URL || 'http://localhost:8080';
+        const printUrl = `${serverUrl}/api/v1/print/${fileId}`;
+
+        // Generate QR code with print URL
+        await QRCode.toFile(qrCodePath, printUrl);
         
         // Upload QR code to cloudinary
         const cloudinaryResponse = await uploadQRCode(qrCodePath);
