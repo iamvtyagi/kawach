@@ -2,9 +2,7 @@ import { Router } from 'express';
 import { isAuthenticated } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/multer.js';
 import QRModel from '../models/qrModel.js';
-import { uploadFileOnCloudinary } from '../utils/cloudinary.js';
 import { generateQRCode } from '../controllers/qrcodeController.js';
-import fs from 'fs/promises';
 import FileModel from '../models/fileModel.js'; // Added missing import
 
 const router = Router();
@@ -15,13 +13,17 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         console.log('Request reached file upload route');
         console.log('User:', req.user?._id);
         
-        // Upload to Cloudinary
-        const cloudinaryResponse = await uploadFileOnCloudinary(req.file.path);
+        if (!req.file) {
+            return res.status(400).send({
+                success: false,
+                message: "No file uploaded"
+            });
+        }
 
-        // Create database entry
+        // Create database entry with Cloudinary URL
         const newFile = new FileModel({
-            filename: req.file.filename,
-            path: cloudinaryResponse.url,
+            filename: req.file.originalname,
+            path: req.file.path, // Cloudinary URL
             mimetype: req.file.mimetype,
             size: req.file.size,
             user: req.user._id   // valid ha chill (user document ka id mil jayga )
@@ -29,18 +31,8 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
 
         await newFile.save();
 
-        // Clean up the local file after successful upload
-        try {
-            await fs.unlink(req.file.path);
-            console.log('Local file cleaned up successfully');
-        } catch (unlinkError) {
-            console.error('Error cleaning up local file:', unlinkError);
-            // Continue execution even if cleanup fails
-        }
-
-
-        // Generate QR Code and upload to cloudianry and save to database
-        const qrCode = await generateQRCode(newFile._id, cloudinaryResponse.url);
+        // Generate QR Code for the file URL
+        const qrCode = await generateQRCode(newFile._id, req.file.path);
 
         res.status(200).send({
             success: true,
@@ -101,3 +93,20 @@ router.get('/qrcode/:fileId', isAuthenticated, async (req, res) => {
 });
 
 export default router;
+
+
+/*
+Client Upload
+     ↓
+Express Route (/upload endpoint)
+     ↓
+upload.single('file') middleware
+     ↓
+CloudinaryStorage processes file
+     ↓
+File saved to Cloudinary
+     ↓
+Cloudinary response mapped to req.file
+     ↓
+Save to FileModel
+*/
