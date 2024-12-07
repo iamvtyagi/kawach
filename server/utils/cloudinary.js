@@ -18,27 +18,7 @@ const generatePublicId = (prefix) => {
     return `${prefix}_${timestamp}_${randomString}`;
 };
 
-// Upload Document to cloudinary directly
-export const uploadFileOnCloudinary = async (file) => {
-    try {
-        if (!file) throw new Error('File is required');
-        
-        // Generate a unique public ID for the file
-        const publicId = generatePublicId('file');
-        
-        // Upload file on cloudinary
-        const response = await cloudinary.uploader.upload(file.path, {
-            folder: "uploads",
-            resource_type: "auto",
-            public_id: publicId
-        });
-        console.log("File uploaded successfully", response.url);
-        return response;
-    } catch (err) {
-        console.error("Cloudinary upload failed:", err);
-        throw err;
-    }
-};
+
 
 // Upload QR Code buffer to cloudinary directly
 export const uploadQRCodeBuffer = async (buffer) => {
@@ -72,7 +52,6 @@ export const deleteFileFromCloudinary = async (publicId) => {
         
         // Try deleting as image first (most common case)
         try {
-            console.log('Attempting to delete as image:', publicId);
             const result = await cloudinary.uploader.destroy(publicId);
             if (result.result === 'ok') {
                 console.log('File deleted successfully from Cloudinary');
@@ -95,12 +74,10 @@ export const deleteFileFromCloudinary = async (publicId) => {
         } catch (error) {
             console.log('Failed to delete as raw file:', error.message);
         }
-
-        // If both attempts failed, throw error
+        // If both try failed
         throw new Error(`Could not delete file with public ID: ${publicId}`);
     } catch (error) {
         console.error('Error deleting file from Cloudinary:', error);
-        // Don't throw here, just return error status
         return { success: false, message: error.message };
     }
 };

@@ -4,7 +4,7 @@ import upload from '../middlewares/multer.js';
 import QRModel from '../models/qrModel.js';
 import { generateQRCode } from '../controllers/qrcodeController.js';
 import FileModel from '../models/fileModel.js';
-import { uploadFileOnCloudinary, deleteFileFromCloudinary } from '../utils/cloudinary.js';
+import {  deleteFileFromCloudinary } from '../utils/cloudinary.js';
 
 const router = Router();
 
@@ -23,29 +23,26 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
             });
         }
 
-        // Upload file to Cloudinary
-        const cloudinaryResponse = await uploadFileOnCloudinary(req.file);
-
         // Create database entry with Cloudinary URL and public ID
         const newFile = new FileModel({
             filename: req.file.originalname,
-            path: cloudinaryResponse.url, // Use secure_url from Cloudinary
+            path: req.file.path, // Cloudinary URL from multer-storage-cloudinary
             mimetype: req.file.mimetype,
             size: req.file.size,
             user: req.user._id,
-            PublicId: cloudinaryResponse.public_id
+            PublicId: req.file.filename // Public ID from multer-storage-cloudinary
         });
 
         await newFile.save();
 
         // Generate QR Code for the file URL
-        const qrCode = await generateQRCode(newFile._id, cloudinaryResponse.url);
+        const qrCode = await generateQRCode(newFile._id, req.file.path);
 
         res.status(200).send({
             success: true,
             message: "File uploaded successfully",
             fileId: newFile._id,
-            fileUrl: cloudinaryResponse.url
+            fileUrl: req.file.path
         });
     } catch (error) {
         console.error('Upload error:', error);

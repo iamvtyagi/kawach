@@ -3,7 +3,7 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from 'cloudinary';
 import crypto from "crypto";
 
-// Configure Cloudinary storage
+// Configure Cloudinary storage   - multer-storage-cloudinary handles uploading to cloudinary
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {

@@ -37,8 +37,9 @@ const GenerateQR = () => {
 
   const handleQRExpiration = async () => {
     try {
-      if (fileId) {
+      if (fileId && timerActive) { // Only delete if timer is active
         console.log('QR Code expired, deleting file...');
+        setTimerActive(false); // Prevent multiple delete calls
         await axios.delete(`/api/v1/file/delete/${fileId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -47,9 +48,7 @@ const GenerateQR = () => {
         setQrCode(null);
         setQrGenerated(false);
         setDocumentInfo(null);
-        setTimerActive(false);
         toast.success('QR Code has expired and file has been deleted');
-        // Navigate back to dashboard after deleting of file 
         navigate('/dashboard');
       }
     } catch (error) {
@@ -116,33 +115,7 @@ const GenerateQR = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this document?')) {
-      try {
-        const response = await axios.delete(
-          `${import.meta.env.VITE_API}/api/v1/file/${fileId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
 
-        if (response.data.success) {
-          toast.success('Document deleted successfully');
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          logout();
-          navigate('/');
-        } else {
-          console.error('Delete error:', error);
-          toast.error('Error deleting document');
-        }
-      }
-    }
-  };
 
   const loadPdfJsIfNeeded = async () => {
     if (window.pdfjsLib) return;
@@ -284,8 +257,43 @@ const GenerateQR = () => {
     }
   };
 
+  const handlePrint = async () => {
+    try {
+      setLoading(true);
+      // Get print URL
+      const response = await axios.get(`/api/v1/print/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.data.success) {
+        // Open print window
+        const printWindow = window.open(response.data.printUrl, '_blank');
+        if (printWindow) {
+          printWindow.onload = function() {
+            printWindow.print();
+          };
+        }
+      } 
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error('Error generating print preview');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQRCodeScan = async () => {
+    try {
+      await handlePrint();
+    } catch (error) {
+      console.error('Error handling QR scan:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white overflow-x-hidden">
       <Animate />
       {/* Back to Dashboard Link */}
       <div className="relative z-10 p-6">
@@ -389,13 +397,7 @@ const GenerateQR = () => {
                           </svg>
                           Print Document
                         </button>
-                        <button
-                          onClick={handleDelete}
-                          className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold py-3 px-6 rounded-lg transition border border-red-500/20"
-                        >
-                          <FaTrash className="text-sm" />
-                          Delete Document
-                        </button>
+                        
                       </div>
                     </div>
                   </div>
@@ -403,7 +405,12 @@ const GenerateQR = () => {
 
                 {/* QR Code Display */}
                 <div className="flex flex-col items-center p-6 bg-white rounded-xl">
-                  <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                  <img 
+                    src={qrCode} 
+                    alt="QR Code" 
+                    className="w-48 h-48" 
+                    onLoad={handleQRCodeScan}
+                  />
                   <p className="mt-4 text-gray-900 text-sm font-medium">Scan to access document</p>
                   <p className="text-gray-500 text-sm">Time Remaining: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</p>
                 </div>
