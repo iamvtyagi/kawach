@@ -38,6 +38,10 @@ const qrSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    // cloudinaryPublicId: {
+    //     type: String,
+    //     required: true,
+    // },
 });
 
 // Export the model

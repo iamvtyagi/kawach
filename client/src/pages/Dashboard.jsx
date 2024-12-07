@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,7 @@ const Dashboard = () => {
   const { user, logout, setFile } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
   const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
-
+  
   // Mock data for recent uploads (replace with actual data from backend API)
   const recentUploads = [
     { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
@@ -57,7 +57,6 @@ const Dashboard = () => {
       formData.append('file', file);
       console.log('FormData created with file');
 
-
       const res = await axios.post('/api/v1/file/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -65,10 +64,11 @@ const Dashboard = () => {
         }
       });
       console.log('Upload response:', res.data);
-      setFile(res.data.fileId);
-
+      
       if (res.data.success) {
+        setFile(res.data.fileId);
         toast.success('File uploaded successfully');
+        navigate('/generate-qr'); // Navigate after successful upload   ?????????
       } else {
         toast.error(res.data.message);
       }
@@ -140,7 +140,7 @@ const Dashboard = () => {
                 </button>
               </div>
             ) : (   //if not selected run this
-              <>
+              <div>
                 <FaUpload className="mx-auto h-12 w-12 text-gray-500 mb-4" />
                 <p className="text-gray-400 mb-4">
                   Drag and drop your document here, or click to select
@@ -158,7 +158,7 @@ const Dashboard = () => {
                 >
                   Select File
                 </label>
-              </>
+              </div>
             )}
           </div>
         </div>

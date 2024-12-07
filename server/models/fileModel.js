@@ -34,6 +34,10 @@ const fileSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  PublicId: {
+    type: String,
+    required: true,
+  },
 });
 
 // Export the model
