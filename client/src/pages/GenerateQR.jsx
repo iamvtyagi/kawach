@@ -4,7 +4,7 @@ import { FaLock, FaArrowLeft, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 
 const GenerateQR = () => {
   const navigate = useNavigate();
@@ -13,18 +13,27 @@ const GenerateQR = () => {
   const [error, setError] = useState(null);
   const [qrGenerated, setQrGenerated] = useState(false);
   const [qrCode, setQrCode] = useState(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
 
   const generateQRCode = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!fileId) {
         setError('No file selected. Please upload a file first.');
         return;
       }
 
+      // Clear previous QR code while loading
+      if (qrGenerated) {
+        setQrCode(null);
+      }
+       // Simulate API delay
+       await new Promise(resolve => setTimeout(resolve, 7000));    // abhi ya pause ha bec kuch or chl rha hai
+
+      //fetch qr code
       const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -36,14 +45,18 @@ const GenerateQR = () => {
       }
 
       const { qrCode, fileName, uploadDate } = res.data;
-      
+
+      // Set the new QR code
       setQrCode(qrCode);
       setDocumentInfo({
         name: fileName,
-        uploadDate: new Date(uploadDate).toLocaleDateString(),  
+        uploadDate: new Date(uploadDate).toLocaleDateString(),
         status: 'Active'
       });
+
       setQrGenerated(true);
+
+
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
       console.error('QR Generation Error:', err);
@@ -58,7 +71,7 @@ const GenerateQR = () => {
       setLoading(false);   // after qr code is generated set loading false
     }
   };
-  
+
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this document?')) {
@@ -361,6 +374,7 @@ const GenerateQR = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 };

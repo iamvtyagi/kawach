@@ -11,7 +11,7 @@ const Dashboard = () => {
   const { user, logout, setFile } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
   const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
-
+  
   // Mock data for recent uploads (replace with actual data from backend API)
   const recentUploads = [
     { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },

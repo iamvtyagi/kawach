@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary';
-import fs from 'fs';   //file system module inbuilt in nodejs
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,52 +10,45 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET                   
 });
 
-// Upload Document to the 'documents' folder
-export const uploadFileOnCloudinary = async (localFilePath) => {  //localFilePath -> from multer
-    // The localFilePath is passed as an argument to this function. This path is expected to be the path of the file
-    // that needs to be uploaded to Cloudinary. This path is likely obtained from a file upload process, such as
-    // using the multer middleware in Express.js to handle multipart/form-data requests.
+// Upload Document to cloudinary directly
+export const uploadFileOnCloudinary = async (file) => {
     try {
-        if (!localFilePath) throw new Error('File path is required');
+        if (!file) throw new Error('File is required');
         // Upload file on cloudinary
-        // This line initiates the upload process to Cloudinary. It takes the localFilePath as the first argument, 
-        // which is the path to the file on the local machine that needs to be uploaded. The second argument is an 
-        // options object that can be used to specify various settings for the upload, such as the folder where the 
-        // file should be stored, the type of resource being uploaded, and more.
-        const response = await cloudinary.uploader.upload(localFilePath, {
+        const response = await cloudinary.uploader.upload(file.path, {
             folder: "uploads",
-            resource_type: "auto"  //auto detect the file type
-        })
-        //file has been uploaded successfully
-        console.log("File uploaded successfully", response.url); //response. many options available like url, public_id,size,format,original_filename etc
+            resource_type: "auto"
+        });
+        console.log("File uploaded successfully", response.url);
         return response;
     } catch (err) {
-        // Handle the error
         console.error("Cloudinary upload failed:", err);
-        // Attempt to delete the local file
-        try {
-            fs.unlinkSync(localFilePath); // This will throw an error if deletion fails
-            console.log("Local file deleted successfully.");
-        } catch (unlinkErr) {
-            console.error("Failed to delete local file:", unlinkErr);
-        }
+        throw err;
     }
 }
 
-// Upload QR Code to the 'qr_codes' folder
-export const uploadQRCode = async (localFilePath) => {
+// Upload QR Code buffer to cloudinary directly
+export const uploadQRCodeBuffer = async (buffer) => {
     try {
-      const response = await cloudinary.uploader.upload(localFilePath, {
-        folder: 'qr_codes',  // Specify folder
-        resource_type: 'auto',
-      });
-      console.log('QR Code uploaded successfully:', response.url);
-      return response;
+        if (!buffer) throw new Error('Buffer is required');
+        
+        // Convert buffer to base64 string
+        const base64String = buffer.toString('base64');
+        const dataURI = `data:image/png;base64,${base64String}`;
+        
+        // Upload buffer to cloudinary
+        const response = await cloudinary.uploader.upload(dataURI, {
+            folder: 'qr_codes',
+            resource_type: 'auto'
+        });
+        
+        console.log('QR Code uploaded successfully:', response.url);
+        return response;
     } catch (err) {
-      console.error('Error uploading QR code:', err);
-      throw err;
+        console.error('Error uploading QR code:', err);
+        throw err;
     }
-  };
+};
 
 // Delete file from Cloudinary
 export const deleteFileFromCloudinary = async (publicId) => {
