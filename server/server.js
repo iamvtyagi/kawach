@@ -35,9 +35,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
-app.use(express.json());
 app.use(morgan('dev'))
-
 
 //routes
 app.use("/api/v1/auth", authRoutes);
@@ -48,12 +46,12 @@ app.use('/api/v1/print', printRoute);
 
 app.get("/", (req, res) => {
   res.send({
-    message: "chal gya"
+    message: "Welcome to Kawach API"
   })
 })
 
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`connected to server ${process.env.DEV_MODE} mode with port ${PORT}`.bgCyan.white);
+  console.log(`Server Running on port ${PORT}`.bgCyan.white);
 });
