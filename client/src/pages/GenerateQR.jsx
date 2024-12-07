@@ -15,6 +15,47 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(15); // 3 minutes in seconds
+  const [timerActive, setTimerActive] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (timerActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            handleQRExpiration();
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timerActive, timeLeft]);
+
+  const handleQRExpiration = async () => {
+    try {
+      if (fileId && timerActive) { // Only delete if timer is active
+        console.log('QR Code expired, deleting file...');
+        setTimerActive(false); // Prevent multiple delete calls
+        await axios.delete(`/api/v1/file/delete/${fileId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        setQrCode(null);
+        setQrGenerated(false);
+        setDocumentInfo(null);
+        toast.success('QR Code has expired and file has been deleted');
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Error deleting file');
+    }
+  };
 
   const generateQRCode = async () => {
     try {
@@ -30,10 +71,10 @@ const GenerateQR = () => {
       if (qrGenerated) {
         setQrCode(null);
       }
-       // Simulate API delay
-       await new Promise(resolve => setTimeout(resolve, 7000));    // abhi ya pause ha bec kuch or chl rha hai
+      //  // Simulate API delay
+      //  await new Promise(resolve => setTimeout(resolve, 7000));  
 
-      //fetch qr code
+      // Fetch qr code
       const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -53,14 +94,16 @@ const GenerateQR = () => {
         uploadDate: new Date(uploadDate).toLocaleDateString(),
         status: 'Active'
       });
-
       setQrGenerated(true);
+      
+      // Start the timer
+      setTimeLeft(15);
+      setTimerActive(true);
 
-
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
-      console.error('QR Generation Error:', err);
-      if (err.response?.status === 401) {
+    } catch (error) {
+      setError(error.message || 'Failed to generate QR code');
+      console.error('QR Generation Error:', error);
+      if (error.response?.status === 401) {
         logout();
         navigate('/');
       } else {
@@ -73,33 +116,6 @@ const GenerateQR = () => {
   };
 
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this document?')) {
-      try {
-        const response = await axios.delete(
-          `${import.meta.env.VITE_API}/api/v1/file/${fileId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        if (response.data.success) {
-          toast.success('Document deleted successfully');
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          logout();
-          navigate('/');
-        } else {
-          console.error('Delete error:', error);
-          toast.error('Error deleting document');
-        }
-      }
-    }
-  };
 
   const loadPdfJsIfNeeded = async () => {
     if (window.pdfjsLib) return;
@@ -241,8 +257,43 @@ const GenerateQR = () => {
     }
   };
 
+  const handlePrint = async () => {
+    try {
+      setLoading(true);
+      // Get print URL
+      const response = await axios.get(`/api/v1/print/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.data.success) {
+        // Open print window
+        const printWindow = window.open(response.data.printUrl, '_blank');
+        if (printWindow) {
+          printWindow.onload = function() {
+            printWindow.print();
+          };
+        }
+      } 
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error('Error generating print preview');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQRCodeScan = async () => {
+    try {
+      await handlePrint();
+    } catch (error) {
+      console.error('Error handling QR scan:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white overflow-x-hidden">
       <Animate />
       {/* Back to Dashboard Link */}
       <div className="relative z-10 p-6">
@@ -346,13 +397,7 @@ const GenerateQR = () => {
                           </svg>
                           Print Document
                         </button>
-                        <button
-                          onClick={handleDelete}
-                          className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold py-3 px-6 rounded-lg transition border border-red-500/20"
-                        >
-                          <FaTrash className="text-sm" />
-                          Delete Document
-                        </button>
+                        
                       </div>
                     </div>
                   </div>
@@ -360,8 +405,14 @@ const GenerateQR = () => {
 
                 {/* QR Code Display */}
                 <div className="flex flex-col items-center p-6 bg-white rounded-xl">
-                  <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                  <img 
+                    src={qrCode} 
+                    alt="QR Code" 
+                    className="w-48 h-48" 
+                    onLoad={handleQRCodeScan}
+                  />
                   <p className="mt-4 text-gray-900 text-sm font-medium">Scan to access document</p>
+                  <p className="text-gray-500 text-sm">Time Remaining: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</p>
                 </div>
               </div>
             )}
@@ -379,4 +430,4 @@ const GenerateQR = () => {
   );
 };
 
-export default GenerateQR;
+export default GenerateQR;  

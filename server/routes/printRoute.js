@@ -35,7 +35,7 @@ router.get('/:fileId', async (req, res) => {
         }
 
         // For other files, send print-optimized HTML
-        res.send(`
+        const htmlContent = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -45,47 +45,83 @@ router.get('/:fileId', async (req, res) => {
                         margin: 0;
                         padding: 20px;
                         font-family: Arial, sans-serif;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        -webkit-user-select: none;
+                        -moz-user-select: none;
+                        -ms-user-select: none;
+                        user-select: none;
+                    }
+                    .container {
+                        max-width: 800px;
+                        margin: 0 auto;
+                        text-align: center;
+                    }
+                    .qr-container {
+                        margin: 20px 0;
+                        pointer-events: none;
                     }
                     img {
-                        max-width: 100%;
-                        height: auto;
-                        display: block;
-                        margin: 0 auto;
+                        max-width: 300px;
+                        pointer-events: none;
+                        -webkit-user-drag: none;
+                        -khtml-user-drag: none;
+                        -moz-user-drag: none;
+                        -o-user-drag: none;
+                        user-drag: none;
                     }
                     .info {
-                        max-width: 800px;
-                        margin: 20px auto;
-                    }
-                    @media print {
-                        .no-print {
-                            display: none !important;
-                        }
+                        margin: 20px 0;
+                        color: #666;
                     }
                 </style>
-            </head>
-            <body>
-                ${
-                    fileDoc.mimetype.startsWith('image/') 
-                    ? `<img src="${qrDoc.fileUrl}" alt="${fileDoc.filename}">`
-                    : `
-                        <div class="info">
-                            <h1>${fileDoc.filename}</h1>
-                            <p>Type: ${fileDoc.mimetype}</p>
-                            <p>Size: ${(fileDoc.size / 1024).toFixed(2)} KB</p>
-                            <p>Upload Date: ${new Date(fileDoc.uploadDate).toLocaleString()}</p>
-                            <a href="${qrDoc.fileUrl}" class="no-print" target="_blank">Download File</a>
-                        </div>
-                    `
-                }
                 <script>
-                    // Auto-trigger print dialog
+                    // Disable right click
+                    document.addEventListener('contextmenu', event => event.preventDefault());
+                    
+                    // Disable keyboard shortcuts
+                    document.addEventListener('keydown', function(e) {
+                        if ((e.ctrlKey || e.metaKey) && 
+                            (e.key === 's' || e.key === 'S' || e.key === 'c' || e.key === 'C')) {
+                            e.preventDefault();
+                        }
+                    });
+
+                    // Disable drag and drop
+                    document.addEventListener('dragstart', function(e) {
+                        e.preventDefault();
+                    });
+
+                    // Print automatically and close
                     window.onload = function() {
                         window.print();
-                    };
+                        // Optional: Close window after printing
+                        // window.onafterprint = function() {
+                        //     window.close();
+                        // };
+                    }
                 </script>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Print ${fileDoc.filename}</h1>
+                    ${
+                        fileDoc.mimetype.startsWith('image/') 
+                        ? `<div class="qr-container"><img src="${qrDoc.fileUrl}" alt="${fileDoc.filename}"></div>`
+                        : `
+                            <div class="info">
+                                <p>Filename: ${fileDoc.filename}</p>
+                                <p>Type: ${fileDoc.mimetype}</p>
+                                <p>Size: ${(fileDoc.size / 1024).toFixed(2)} KB</p>
+                                <p>Upload Date: ${new Date(fileDoc.uploadDate).toLocaleString()}</p>
+                            </div>
+                        `
+                    }
+                </div>
             </body>
             </html>
-        `);
+        `;
+        res.send(htmlContent);
     } catch (error) {
         console.error('Print error:', error);
         res.status(500).send({
