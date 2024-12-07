@@ -3,7 +3,8 @@ import { isAuthenticated } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/multer.js';
 import QRModel from '../models/qrModel.js';
 import { generateQRCode } from '../controllers/qrcodeController.js';
-import FileModel from '../models/fileModel.js'; // Added missing import
+import FileModel from '../models/fileModel.js';
+import { uploadFileOnCloudinary, deleteFileFromCloudinary } from '../utils/cloudinary.js';
 
 const router = Router();
 
@@ -22,24 +23,29 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
             });
         }
 
-        // Create database entry with Cloudinary URL
+        // Upload file to Cloudinary
+        const cloudinaryResponse = await uploadFileOnCloudinary(req.file);
+
+        // Create database entry with Cloudinary URL and public ID
         const newFile = new FileModel({
             filename: req.file.originalname,
-            path: req.file.path, // Cloudinary URL
+            path: cloudinaryResponse.url, // Use secure_url from Cloudinary
             mimetype: req.file.mimetype,
             size: req.file.size,
-            user: req.user._id   // valid ha chill (user document ka id mil jayga )
+            user: req.user._id,
+            PublicId: cloudinaryResponse.public_id
         });
 
         await newFile.save();
 
         // Generate QR Code for the file URL
-        const qrCode = await generateQRCode(newFile._id, req.file.path);
+        const qrCode = await generateQRCode(newFile._id, cloudinaryResponse.url);
 
         res.status(200).send({
             success: true,
             message: "File uploaded successfully",
             fileId: newFile._id,
+            fileUrl: cloudinaryResponse.url
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -90,6 +96,63 @@ router.get('/qrcode/:fileId', isAuthenticated, async (req, res) => {
         res.status(500).send({
             success: false,
             message: 'Error fetching QR code',
+            error: error.message
+        });
+    }
+});
+
+// Delete File Route
+router.delete('/delete/:fileId', isAuthenticated, async (req, res) => {
+    try {
+        console.log("Delete request received for fileId:", req.params.fileId);
+        const { fileId } = req.params;
+        const userId = req.user._id;
+
+        // Find the file and verify ownership
+        const file = await FileModel.findOne({ 
+            _id: fileId,
+            user: userId 
+        });
+
+        if (!file) {
+            console.log("File not found or unauthorized");
+            return res.status(404).send({
+                success: false,
+                message: 'File not found or unauthorized'
+            });
+        }
+
+        console.log("Found file:", file);
+
+        // Delete from Cloudinary
+        if (file.PublicId) {
+            console.log("Attempting to delete from Cloudinary with PublicId:", file.PublicId);
+            try {
+                await deleteFileFromCloudinary(file.PublicId);
+                console.log("Successfully deleted from Cloudinary");
+            } catch (cloudinaryError) {
+                console.error("Cloudinary deletion error:", cloudinaryError);
+                // Continue with database cleanup even if Cloudinary deletion fails
+            }
+        }
+
+        // Delete QR code if exists
+        const deletedQR = await QRModel.findOneAndDelete({ fileId: file._id });
+        console.log("QR code deletion result:", deletedQR ? "Deleted" : "Not found");
+
+        // Delete file document
+        await FileModel.findByIdAndDelete(fileId);
+        console.log("File document deleted from database");
+
+        res.status(200).send({
+            success: true,
+            message: 'File deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).send({
+            success: false,
+            message: 'Error deleting file',
             error: error.message
         });
     }
