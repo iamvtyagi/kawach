@@ -72,19 +72,19 @@ export const deleteFileFromCloudinary = async (publicId) => {
         
         // Try deleting as image first (most common case)
         try {
-            const result = await cloudinary.uploader.destroy(publicId, {
-                resource_type: "image"
-            });
+            console.log('Attempting to delete as image:', publicId);
+            const result = await cloudinary.uploader.destroy(publicId);
             if (result.result === 'ok') {
                 console.log('File deleted successfully from Cloudinary');
                 return { success: true, message: 'File deleted successfully' };
             }
         } catch (error) {
-            console.log('Not an image, trying raw file...');
+            console.log('Failed to delete as image, trying as raw file:', error.message);
         }
 
         // If image deletion failed, try as raw
         try {
+            console.log('Attempting to delete as raw:', publicId);
             const result = await cloudinary.uploader.destroy(publicId, {
                 resource_type: "raw"
             });
@@ -93,12 +93,14 @@ export const deleteFileFromCloudinary = async (publicId) => {
                 return { success: true, message: 'File deleted successfully' };
             }
         } catch (error) {
-            console.log('Not a raw file either...');
+            console.log('Failed to delete as raw file:', error.message);
         }
 
-        throw new Error('Failed to delete file from Cloudinary');
+        // If both attempts failed, throw error
+        throw new Error(`Could not delete file with public ID: ${publicId}`);
     } catch (error) {
         console.error('Error deleting file from Cloudinary:', error);
-        throw error;
+        // Don't throw here, just return error status
+        return { success: false, message: error.message };
     }
 };

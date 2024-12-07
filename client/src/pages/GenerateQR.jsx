@@ -15,7 +15,7 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(30); // 3 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(15); // 3 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
@@ -38,6 +38,7 @@ const GenerateQR = () => {
   const handleQRExpiration = async () => {
     try {
       if (fileId) {
+        console.log('QR Code expired, deleting file...');
         await axios.delete(`/api/v1/file/delete/${fileId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -46,7 +47,10 @@ const GenerateQR = () => {
         setQrCode(null);
         setQrGenerated(false);
         setDocumentInfo(null);
+        setTimerActive(false);
         toast.success('QR Code has expired and file has been deleted');
+        // Navigate back to dashboard after deleting of file 
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error deleting file:', error);
@@ -68,11 +72,10 @@ const GenerateQR = () => {
       if (qrGenerated) {
         setQrCode(null);
       }
-      
-      // Simulate API delay
-       await new Promise(resolve => setTimeout(resolve, 7000));    // abhi ya pause ha bec kuch or chl rha hai
+      //  // Simulate API delay
+      //  await new Promise(resolve => setTimeout(resolve, 7000));  
 
-      //fetch qr code
+      // Fetch qr code
       const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -95,11 +98,11 @@ const GenerateQR = () => {
       setQrGenerated(true);
       
       // Start the timer
-      setTimeLeft(30);
+      setTimeLeft(15);
       setTimerActive(true);
 
     } catch (error) {
-      setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
+      setError(error.message || 'Failed to generate QR code');
       console.error('QR Generation Error:', error);
       if (error.response?.status === 401) {
         logout();

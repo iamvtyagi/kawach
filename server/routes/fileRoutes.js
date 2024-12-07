@@ -124,7 +124,7 @@ router.delete('/delete/:fileId', isAuthenticated, async (req, res) => {
 
         console.log("Found file:", file);
 
-        // Delete from Cloudinary
+        // Delete from Cloudinary using publicid
         if (file.PublicId) {
             console.log("Attempting to delete from Cloudinary with PublicId:", file.PublicId);
             try {
@@ -132,7 +132,7 @@ router.delete('/delete/:fileId', isAuthenticated, async (req, res) => {
                 console.log("Successfully deleted from Cloudinary");
             } catch (cloudinaryError) {
                 console.error("Cloudinary deletion error:", cloudinaryError);
-                // Continue with database cleanup even if Cloudinary deletion fails
+                // continue with database delete 
             }
         }
 
