@@ -9,7 +9,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const GenerateQR = () => {
   const navigate = useNavigate();
-  const { user, fileId, addUpload } = useAuth();
+  const { user, fileId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrGenerated, setQrGenerated] = useState(false);
@@ -32,7 +32,7 @@ const GenerateQR = () => {
         setQrCode(null);
       }
        // Simulate API delay
-       await new Promise(resolve => setTimeout(resolve, 9000));    // abhi ya pause ha bec kuch or chl rha hai
+       await new Promise(resolve => setTimeout(resolve, 7000));    // abhi ya pause ha bec kuch or chl rha hai
 
       //fetch qr code
       const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
@@ -49,23 +49,14 @@ const GenerateQR = () => {
 
       // Set the new QR code
       setQrCode(qrCode);
-      const docInfo = {
+      setDocumentInfo({
         name: fileName,
-        date: new Date(uploadDate).toLocaleDateString(),
+        uploadDate: new Date(uploadDate).toLocaleDateString(),
         status: 'Active'
-      };
-      setDocumentInfo(docInfo);
-      
-      // Add to recent uploads
-      addUpload(docInfo);
+      });
 
       setQrGenerated(true);
 
-      // After successful QR generation, navigate back to dashboard
-      toast.success('QR Code generated successfully!');
-      setTimeout(() => {
-        navigate('/dashboard');  // This will trigger a fresh fetch of recent uploads
-      }, 2000);
 
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to generate QR code. Please try again.');
@@ -83,40 +74,6 @@ const GenerateQR = () => {
       // Add delete logic here
     }
   };
-
-  // Print function
-  // const handlePrint = () => {
-  //   if (qrCodeUrl) {
-  //     // Create a new window
-  //     const printWindow = window.open('', '_blank');
-      
-  //     // Write the content to be printed
-  //     printWindow.document.write(`
-  //       <html>
-  //         <head>
-  //           <title>QR Code Content</title>
-  //         </head>
-  //         <body style="height:100vh width:100vw">
-  //           <div class="container">
-  //             <img src="${qrCodeUrl}" alt="QR Code" class="qr-code"/>
-  //             </div>
-  //           </div>
-  //         </body>
-  //       </html>
-  //     `);
-      
-  //     // Close the document
-  //     printWindow.document.close();
-      
-  //     // Wait for images to load then print
-  //     printWindow.onload = function() {
-  //       printWindow.focus();
-  //       printWindow.print();
-  //     };
-  //   } else {
-  //     toast.error('No QR code data to print');
-  //   }
-  // };
 
   useEffect(() => {
     // Decode QR code whenever qrCode changes  
@@ -173,7 +130,7 @@ const GenerateQR = () => {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
               <p className="text-gray-400">Upload Date</p>
-              <p>{documentInfo?.date}</p>
+              <p>{documentInfo?.uploadDate}</p>
             </div>
             <div>
               <p className="text-gray-400">Status</p>
@@ -228,14 +185,6 @@ const GenerateQR = () => {
                         <FaCopy />
                         Copy URL
                       </button>
-                      {/* <button
-                        onClick={handlePrint}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 text-gray-300 rounded-lg
-                          hover:bg-gray-700/70 transition-colors"
-                      >
-                        <FaPrint />
-                        Print
-                      </button> */}
                     </div>
                   </div>
                 </div>
