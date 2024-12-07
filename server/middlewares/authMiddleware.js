@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import userModel from '../models/userModel.js'
+// import userModel from '../models/userModel.js'
 
 // not use (same in down)
 // Protected route token based
@@ -20,7 +20,10 @@ import userModel from '../models/userModel.js'
 
 export const isAuthenticated = async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1]; // Assuming Bearer token
+        // Get the token from the Authorization header
+        // Assuming it's in the format "Bearer <token>"
+        // Split the header value by space and get the second element (index 1)
+        const token = req.headers.authorization?.split(' ')[1];  // The token itself
         if (!token) {
             return res.status(401).send('Access denied. No token provided.');
         }

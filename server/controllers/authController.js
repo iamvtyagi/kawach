@@ -83,6 +83,10 @@ export const loginController = async (req, res) => {
       });
     }
     //token
+    //create token
+    //payload: user id
+    //secret:  JWT_SECRET from env
+    //expiresIn: 2 hours
     const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "2h",
     });

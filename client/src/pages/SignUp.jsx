@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaLock, FaEnvelope, FaUser, FaPhone } from 'react-icons/fa';
+// FaLock: lock icon
+// FaEnvelope: envelope icon
+// FaUser: user icon
+// FaPhone: phone icon
 import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Animate from '../components/Animate';
 
 const Signup = () => {
@@ -31,22 +35,18 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // login(formData);
-    // navigate('/');
-
     try { 
       const { name, email, password, phone } = formData; 
-      // Use the environment variable for the API request
       const res = await axios.post(`/api/v1/auth/register`, { name, email, password, phone });
       if (res.data.success) {
         toast.success(res.data.message);
         navigate('/login');
       } else {
-        toast.error(res.data.message, { position: "top-center" });
+        toast.error(res.data.message);
       }
     } catch (err) {
       console.log(err);
-      toast.error("Something went wrong", { position: "top-center" });
+      toast.error("Something went wrong");
     }
   };
 

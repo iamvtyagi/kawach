@@ -2,9 +2,11 @@ import express from 'express'
 import colors from 'colors'
 import dotenv from 'dotenv'
 import morgan from 'morgan'
+import cors from 'cors'
 import connectDb from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
-import fileRoutes from './routes/fileRoutes.js';
+import fileRoutes from './routes/fileRoutes.js'
+import printRoute from './routes/printRoute.js';
 
 // Log environment variables (without sensitive data)
 console.log('Environment Variables Loaded:', {
@@ -28,28 +30,28 @@ dotenv.config()
 //database config 
 connectDb();
 
-
 //middlewares
-app.use(express.json());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true
+}));
 app.use(morgan('dev'))
-
 
 //routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/file", fileRoutes); // routes for file operations (upload, fetch, and QR generation)
-
-
+app.use('/api/v1/print', printRoute);
 
 //rest api
 
 app.get("/", (req, res) => {
   res.send({
-    message: "chal gya"
+    message: "Welcome to Kawach API"
   })
 })
 
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`connected to server ${process.env.DEV_MODE} mode with port ${PORT}`.bgCyan.white);
+  console.log(`Server Running on port ${PORT}`.bgCyan.white);
 });
