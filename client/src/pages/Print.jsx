@@ -20,18 +20,23 @@ const Print = () => {
     }
 
     // Disable right-click
-    const handleContextMenu = (e) => e.preventDefault();
-    document.addEventListener('contextmenu', handleContextMenu);
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
 
-    // Disable keyboard shortcuts
+    // Disable keyboard shortcuts and dev tools
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && 
-          (e.key === 's' || e.key === 'p' || e.key === 'c' || 
-           e.key === 'u' || e.key === 'i')) {
+      // Prevent Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Dev Tools)
+      if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+          // Prevent Ctrl+S, Ctrl+P, Ctrl+C, Ctrl+V
+          (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'c' || e.key === 'v')) ||
+          // Prevent F12
+          e.key === 'F12') {
         e.preventDefault();
+        return false;
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
 
     // Fetch file data
     const fetchFile = async () => {
@@ -44,7 +49,7 @@ const Print = () => {
         });
 
         if (response.data.success) {
-          console.log('File data received:', response.data.file);
+          console.log('File data received');
           setFileData(response.data.file);
         } else {
           toast.error('Failed to load document');
@@ -59,11 +64,22 @@ const Print = () => {
       }
     };
 
+    // Add event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Disable drag and select
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+
     fetchFile();
 
+    // Cleanup event listeners
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('selectstart', e => e.preventDefault());
+      document.removeEventListener('dragstart', e => e.preventDefault());
     };
   }, [fileId, navigate]);
 
@@ -77,6 +93,7 @@ const Print = () => {
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         toast.error('Please allow popups to print');
+        navigate('/dashboard');
         return;
       }
 
@@ -86,17 +103,39 @@ const Print = () => {
         <head>
           <title>Print Document</title>
           <style>
-            body { margin: 0; }
+            body { margin: 0; -webkit-print-color-adjust: exact; }
             img { max-width: 100%; height: auto; }
             @media print {
               body { margin: 0; }
             }
           </style>
           <script>
+            // Block right click and keyboard shortcuts
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
+              if (e.ctrlKey || e.key === 'F12') e.preventDefault();
+            });
+            
+            function handleAfterPrint() {
+              window.close();
+              window.opener.location.href = '/dashboard';
+            }
+
             function handlePrint() {
               window.print();
-              setTimeout(() => window.close(), 500);
+              // Set a timeout to check if printing was cancelled
+              setTimeout(() => {
+                handleAfterPrint();
+              }, 1000);
             }
+
+            // Listen for the afterprint event
+            window.addEventListener('afterprint', handleAfterPrint);
+            
+            // If window is closed without printing, redirect
+            window.addEventListener('unload', () => {
+              window.opener.location.href = '/dashboard';
+            });
           </script>
         </head>
         <body>
@@ -108,6 +147,7 @@ const Print = () => {
     } catch (error) {
       console.error('Print error:', error);
       toast.error('Error printing document');
+      navigate('/dashboard');
     }
   };
 

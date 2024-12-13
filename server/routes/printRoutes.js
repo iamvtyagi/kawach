@@ -16,7 +16,7 @@ router.get('/:fileId', isAuthenticated, async (req, res) => {
                 message: 'File not found'
             });
         }
-        console.log('File details:', file);
+        console.log('File Ready to Print');
 
         // Send file data to frontend
         res.status(200).json({
