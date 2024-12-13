@@ -6,7 +6,7 @@ import cors from 'cors'
 import connectDb from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
-import printRoute from './routes/printRoute.js';
+import printRoutes from './routes/printRoutes.js';
 
 // Log environment variables (without sensitive data)
 console.log('Environment Variables Loaded:', {
@@ -40,7 +40,7 @@ app.use(morgan('dev'))
 //routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/file", fileRoutes); // routes for file operations (upload, fetch, and QR generation)
-app.use('/api/v1/print', printRoute);
+app.use('/api/v1/print', printRoutes);
 
 //rest api
 

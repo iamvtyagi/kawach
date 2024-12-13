@@ -15,7 +15,7 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(15); // 3 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(40); // 3 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const GenerateQR = () => {
       }
 
       const { qrCode, fileName, uploadDate } = res.data;
-
+      
       // Set the new QR code
       setQrCode(qrCode);
       setDocumentInfo({
@@ -97,7 +97,7 @@ const GenerateQR = () => {
       setQrGenerated(true);
       
       // Start the timer
-      setTimeLeft(15);
+      setTimeLeft(40);
       setTimerActive(true);
 
     } catch (error) {
@@ -115,181 +115,9 @@ const GenerateQR = () => {
     }
   };
 
-
-
-  const loadPdfJsIfNeeded = async () => {
-    if (window.pdfjsLib) return;
-
-    // Load PDF.js library
-    const pdfjsScript = document.createElement('script');
-    pdfjsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    document.head.appendChild(pdfjsScript);
-
-    // Wait for PDF.js to load
-    await new Promise((resolve) => {
-      pdfjsScript.onload = resolve;
-    });
-  };
-
-  const printQRCodeWithInfo = async () => {
-    try {
-      // Get the server URL from environment variable or default to localhost
-      const serverUrl = import.meta.env.VITE_API || 'http://localhost:8080';
-      
-      // Get the QR code information directly from the state
-      if (!qrCode) {
-        toast.error('Please generate QR code first');
-        return;
-      }
-
-      // Open a new window with specific settings
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        toast.error('Please allow popups to print');
-        return;
-      }
-
-      // Write content to the new window
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Print Document</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 20px;
-              font-family: Arial, sans-serif;
-              overflow-x: hidden; /* Prevent horizontal scrollbar */
-            }
-            .container {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            img {
-              max-width: 100%;
-              height: auto;
-              display: block;
-              margin: 0 auto;
-            }
-            .pdf-container {
-              width: 100%;
-              height: 800px;
-              border: none;
-            }
-            @media print {
-              .no-print { display: none !important; }
-              body { margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            ${
-              documentInfo.url?.toLowerCase().endsWith('.pdf')
-              ? `<object data="${documentInfo.url}" type="application/pdf" class="pdf-container">
-                  <embed src="${documentInfo.url}" type="application/pdf" class="pdf-container" />
-                </object>`
-              : documentInfo.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-              ? `<img src="${documentInfo.url}" alt="Document">`
-              : `
-                <div>
-                  <h1>${documentInfo.name || 'Document'}</h1>
-                  <p>Upload Date: ${new Date(documentInfo.uploadDate).toLocaleString()}</p>
-                  <div style="text-align: center; margin-top: 20px;">
-                    <img src="${qrCode}" alt="QR Code" style="max-width: 200px;" />
-                  </div>
-                  <a href="${documentInfo.url}" class="no-print" target="_blank">Download File</a>
-                </div>
-              `
-            }
-          </div>
-          <script>
-            // Function to handle printing
-            function doPrint() {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            }
-
-            // For PDFs and images, wait for them to load
-            window.onload = function() {
-              if (document.querySelector('object')) {
-                // For PDFs
-                setTimeout(doPrint, 1000); // Give PDF time to load
-              } else if (document.querySelector('img')) {
-                // For images
-                const img = document.querySelector('img');
-                if (img.complete) {
-                  doPrint();
-                } else {
-                  img.onload = doPrint;
-                }
-              } else {
-                // For other files
-                doPrint();
-              }
-            };
-          </script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-
-    } catch (error) {
-      console.error('Error in print:', error);
-      toast.error('Error opening print dialog');
-    }
-  };
-
-  const handlePrintDocument = async () => {
-    if (!fileId) {
-      toast.error('No document available');
-      return;
-    }
-
-    try {
-      // Open print route in a new window
-      const printUrl = `${import.meta.env.VITE_API}/api/v1/print/${fileId}`;
-      window.open(printUrl, '_blank');
-    } catch (error) {
-      console.error('Print error:', error);
-      toast.error('Failed to print document');
-    }
-  };
-
-  const handlePrint = async () => {
-    try {
-      setLoading(true);
-      // Get print URL
-      const response = await axios.get(`/api/v1/print/${fileId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.data.success) {
-        // Open print window
-        const printWindow = window.open(response.data.printUrl, '_blank');
-        if (printWindow) {
-          printWindow.onload = function() {
-            printWindow.print();
-          };
-        }
-      } 
-    } catch (error) {
-      console.error('Print error:', error);
-      toast.error('Error generating print preview');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQRCodeScan = async () => {
-    try {
-      await handlePrint();
-    } catch (error) {
-      console.error('Error handling QR scan:', error);
-    }
+  const handlePrinting = () => {
+    console.log('QR Code loaded, ready for printing');
+    // You can add any additional logic here if needed
   };
 
   return (
@@ -386,19 +214,6 @@ const GenerateQR = () => {
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-col gap-4">
-                        <button
-                          onClick={handlePrintDocument}
-                          className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-6 rounded-lg transition"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
-                          </svg>
-                          Print Document
-                        </button>
-                        
-                      </div>
                     </div>
                   </div>
                 )}
@@ -409,10 +224,10 @@ const GenerateQR = () => {
                     src={qrCode} 
                     alt="QR Code" 
                     className="w-48 h-48" 
-                    onLoad={handleQRCodeScan}
+                    onLoad={handlePrinting}
                   />
                   <p className="mt-4 text-gray-900 text-sm font-medium">Scan to access document</p>
-                  <p className="text-gray-500 text-sm">Time Remaining: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</p>
+                  <p className="text-gray-500 text-lg font-bold p-2 rounded-md">Time Remaining: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</p>
                 </div>
               </div>
             )}

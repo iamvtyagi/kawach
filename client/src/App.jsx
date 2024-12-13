@@ -6,8 +6,11 @@ import Signup from './pages/SignUp.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import GenerateQR from './pages/GenerateQR.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import Print from './pages/Print.jsx';
 
 function App() {
+  
+
     const router = createBrowserRouter(
       createRoutesFromElements(
         <Route>
@@ -30,8 +33,15 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route
+          path="/print/:fileId"
+          element={
+              <Print/>
+          }
+          />
+          <Route path="*" element={<Home/>} />
         </Route>
-      )
+      ) 
     );
 
   return (
