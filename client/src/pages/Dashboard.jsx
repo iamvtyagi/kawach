@@ -1,23 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaUpload, FaHistory, FaSignOutAlt, FaLock, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { gsap } from 'gsap';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout, setFile } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null); // Stores the file that the user has selected or dropped.
   const [dragActive, setDragActive] = useState(false);  //Tracks whether the drag-and-drop zone is active (e.g., while dragging a file over it).
-  
-  // Mock data for recent uploads (replace with actual data from backend API)
-  const recentUploads = [
-    { id: 1, name: 'ID_Card.pdf', date: '2024-01-15', status: 'Active' },
-    { id: 2, name: 'Contract.pdf', date: '2024-01-14', status: 'Expired' },
-    { id: 3, name: 'License.pdf', date: '2024-01-13', status: 'Active', },
-  ];
+  const securityMessageRef = useRef(null);
+
+  // Security message for users
+  const securityMessage = {
+    title: "Secure File Handling",
+    description: "Your privacy is our top priority. Files are automatically deleted after printing, leaving absolutely no trace behind. We ensure complete confidentiality of your sensitive documents.",
+    icon: "🔒"
+  };
+
+  useEffect(() => {
+    gsap.fromTo(securityMessageRef.current, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1 });
+  }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -163,49 +169,17 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Uploads Section */}
-        <div className="bg-gray-900 rounded-lg p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4">Recent Uploads</h2>
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-gray-400">
-                <th className="pb-4">Name</th>
-                <th className="pb-4">Upload Date</th>
-                <th className="pb-4">Status</th>
-                <th className="pb-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentUploads && recentUploads.length > 0 ? (
-                recentUploads.map((doc) => (
-                  <tr key={doc._id} className="border-b border-gray-800">
-                    <td className="py-4">{doc.originalname || doc.filename}</td>
-                    <td className="py-4">{new Date(doc.createdAt || doc.uploadDate).toLocaleDateString()}</td>
-                    <td className="py-4">
-                      <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">
-                        Active
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <button
-                        onClick={() => navigate('/generate-qr', { state: { fileId: doc._id } })}
-                        className="flex items-center gap-2 text-cyan-500 hover:text-cyan-400 transition"
-                      >
-                        <FaQrcode />
-                        Generate QR
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="py-4 text-center text-gray-400">
-                    No files uploaded yet
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* Security Message Section */}
+        <div ref={securityMessageRef} className="bg-gray-900/80 backdrop-blur-sm rounded-lg p-8 mt-6 border border-cyan-500/20">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="text-4xl">{securityMessage.icon}</div>
+            <h2 className="text-2xl font-bold text-cyan-500">{securityMessage.title}</h2>
+          </div>
+          <p className="text-lg text-gray-300 leading-relaxed">{securityMessage.description}</p>
+          <div className="mt-6 flex items-center gap-2 text-cyan-400">
+            <FaLock className="w-5 h-5" />
+            <span>Your documents are protected with enterprise-grade security</span>
+          </div>
         </div>
       </div>
     </div>
