@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaLock, FaArrowLeft, FaTrash } from 'react-icons/fa';
+import { FaLock, FaArrowLeft, FaTrash, FaQrcode } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Animate from '../components/Animate';
 import axios from 'axios';
@@ -15,7 +15,7 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(15); // 3 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(60); // 1 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const GenerateQR = () => {
       }
 
       const { qrCode, fileName, uploadDate } = res.data;
-
+      
       // Set the new QR code
       setQrCode(qrCode);
       setDocumentInfo({
@@ -97,7 +97,7 @@ const GenerateQR = () => {
       setQrGenerated(true);
       
       // Start the timer
-      setTimeLeft(15);
+      setTimeLeft(60);
       setTimerActive(true);
 
     } catch (error) {
@@ -117,312 +117,120 @@ const GenerateQR = () => {
 
 
 
-  const loadPdfJsIfNeeded = async () => {
-    if (window.pdfjsLib) return;
-
-    // Load PDF.js library
-    const pdfjsScript = document.createElement('script');
-    pdfjsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    document.head.appendChild(pdfjsScript);
-
-    // Wait for PDF.js to load
-    await new Promise((resolve) => {
-      pdfjsScript.onload = resolve;
-    });
-  };
-
-  const printQRCodeWithInfo = async () => {
-    try {
-      // Get the server URL from environment variable or default to localhost
-      const serverUrl = import.meta.env.VITE_API || 'http://localhost:8080';
-      
-      // Get the QR code information directly from the state
-      if (!qrCode) {
-        toast.error('Please generate QR code first');
-        return;
-      }
-
-      // Open a new window with specific settings
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        toast.error('Please allow popups to print');
-        return;
-      }
-
-      // Write content to the new window
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Print Document</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 20px;
-              font-family: Arial, sans-serif;
-              overflow-x: hidden; /* Prevent horizontal scrollbar */
-            }
-            .container {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            img {
-              max-width: 100%;
-              height: auto;
-              display: block;
-              margin: 0 auto;
-            }
-            .pdf-container {
-              width: 100%;
-              height: 800px;
-              border: none;
-            }
-            @media print {
-              .no-print { display: none !important; }
-              body { margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            ${
-              documentInfo.url?.toLowerCase().endsWith('.pdf')
-              ? `<object data="${documentInfo.url}" type="application/pdf" class="pdf-container">
-                  <embed src="${documentInfo.url}" type="application/pdf" class="pdf-container" />
-                </object>`
-              : documentInfo.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-              ? `<img src="${documentInfo.url}" alt="Document">`
-              : `
-                <div>
-                  <h1>${documentInfo.name || 'Document'}</h1>
-                  <p>Upload Date: ${new Date(documentInfo.uploadDate).toLocaleString()}</p>
-                  <div style="text-align: center; margin-top: 20px;">
-                    <img src="${qrCode}" alt="QR Code" style="max-width: 200px;" />
-                  </div>
-                  <a href="${documentInfo.url}" class="no-print" target="_blank">Download File</a>
-                </div>
-              `
-            }
-          </div>
-          <script>
-            // Function to handle printing
-            function doPrint() {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            }
-
-            // For PDFs and images, wait for them to load
-            window.onload = function() {
-              if (document.querySelector('object')) {
-                // For PDFs
-                setTimeout(doPrint, 1000); // Give PDF time to load
-              } else if (document.querySelector('img')) {
-                // For images
-                const img = document.querySelector('img');
-                if (img.complete) {
-                  doPrint();
-                } else {
-                  img.onload = doPrint;
-                }
-              } else {
-                // For other files
-                doPrint();
-              }
-            };
-          </script>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-
-    } catch (error) {
-      console.error('Error in print:', error);
-      toast.error('Error opening print dialog');
-    }
-  };
-
-  const handlePrintDocument = async () => {
-    if (!fileId) {
-      toast.error('No document available');
-      return;
-    }
-
-    try {
-      // Open print route in a new window
-      const printUrl = `${import.meta.env.VITE_API}/api/v1/print/${fileId}`;
-      window.open(printUrl, '_blank');
-    } catch (error) {
-      console.error('Print error:', error);
-      toast.error('Failed to print document');
-    }
-  };
-
-  const handlePrint = async () => {
-    try {
-      setLoading(true);
-      // Get print URL
-      const response = await axios.get(`/api/v1/print/${fileId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.data.success) {
-        // Open print window
-        const printWindow = window.open(response.data.printUrl, '_blank');
-        if (printWindow) {
-          printWindow.onload = function() {
-            printWindow.print();
-          };
-        }
-      } 
-    } catch (error) {
-      console.error('Print error:', error);
-      toast.error('Error generating print preview');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQRCodeScan = async () => {
-    try {
-      await handlePrint();
-    } catch (error) {
-      console.error('Error handling QR scan:', error);
-    }
-  };
-
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white overflow-x-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#0a0118] to-[#0c0118] text-white">
       <Animate />
-      {/* Back to Dashboard Link */}
-      <div className="relative z-10 p-6">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition font-medium"
-        >
-          <FaArrowLeft />
-          Back to Dashboard
-        </button>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 max-w-full">
-        <div className="max-w-3xl mx-auto w-full">
-          {/* Header Section */}
-          <div className="text-center mb-10 px-4">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">
-              Document QR Code Generator
-            </h1>
-            <p className="text-gray-400 text-lg">
-              Generate a secure QR code for your document that can be used for one-time access
-            </p>
+      
+      {/* Navigation Bar */}
+      <nav className="relative z-10 bg-gray-900/50 backdrop-blur-xl border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <FaLock className="h-8 w-8 text-cyan-500" />
+              <span className="ml-2 text-xl font-bold">Kawach</span>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+            >
+              <FaArrowLeft />
+              <span>Back to Dashboard</span>
+            </button>
           </div>
+        </div>
+      </nav>
 
-          {/* Main Content */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 md:p-8 shadow-xl border border-gray-700">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg mb-6 flex items-center gap-2">
-                <FaLock className="flex-shrink-0" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            {!qrGenerated ? (
-              <div className="space-y-6">
-                {/* Document Preview Section */}
-                <div className="p-6 bg-gray-900/50 rounded-xl border border-gray-700">
-                  <h3 className="text-lg font-semibold mb-4 text-cyan-400">Selected Document</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-cyan-500/10 rounded-lg">
-                      <FaLock className="text-2xl text-cyan-400" />
-                    </div>
-                    <div>
-                      <p className="text-gray-300">Ready to generate QR code</p>
-                      <p className="text-sm text-gray-500">The document will be accessible via QR code</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Generate Button */}
-                <button
-                  onClick={generateQRCode}
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Generating QR Code...
-                    </span>
-                  ) : (
-                    'Generate QR Code'
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Document Information Card */}
-                {documentInfo && (
-                  <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
-                    <h3 className="text-xl font-semibold mb-6 text-cyan-400">Document Information</h3>
-                    <div className="grid grid-cols-1 gap-6">
-                      <div className="space-y-4">
-                        <div className="break-words">
-                          <p className="text-gray-400 text-sm">Document Name</p>
-                          <p className="text-lg font-medium">{documentInfo.name}</p>
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8 overflow-hidden">
+        {/* QR Code Section */}
+        <div className="mt-8">
+          {qrGenerated ? (
+            <div className="space-y-8">
+              {/* QR Code Display */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-3xl"></div>
+                <div className="relative bg-gray-900/70 backdrop-blur-xl rounded-2xl p-8 border border-gray-800">
+                  <div className="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0 md:space-x-8">
+                    {/* QR Code */}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-40 group-hover:opacity-75 transition duration-1000"></div>
+                      <div className="relative p-1 bg-black rounded-lg">
+                        <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-lg p-4">
+                          <img 
+                            src={qrCode} 
+                            alt="QR Code" 
+                            className="w-64 h-64 rounded-lg shadow-2xl transform transition-transform duration-500 group-hover:scale-105"
+                          />
                         </div>
-                        <div>
-                          <p className="text-gray-400 text-sm">Upload Date</p>
-                          <p className="text-lg font-medium">{documentInfo.uploadDate}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 text-sm">Status</p>
-                          <p className="text-lg font-medium flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            {documentInfo.status}
+                      </div>
+                    </div>
+
+                    {/* Document Info & Timer */}
+                    <div className="flex-1 space-y-6">
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                          Document Details
+                        </h3>
+                        <div className="space-y-2 text-gray-300">
+                          <p><span className="text-gray-400">Name:</span> {documentInfo?.name}</p>
+                          <p><span className="text-gray-400">Upload Date:</span> {documentInfo?.uploadDate}</p>
+                          <p><span className="text-gray-400">Status:</span> 
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400">
+                              {documentInfo?.status}
+                            </span>
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-col gap-4">
-                        <button
-                          onClick={handlePrintDocument}
-                          className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-6 rounded-lg transition"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
-                          </svg>
-                          Print Document
-                        </button>
-                        
+
+                      {/* Timer Display */}
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                          Time Remaining
+                        </h3>
+                        <div className="flex items-center space-x-4">
+                          <div className="w-full bg-gray-800 rounded-full h-4 overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-1000"
+                              style={{ width: `${(timeLeft / 60) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-lg font-mono text-cyan-400 min-w-[4rem]">
+                            {timeLeft}s
+                          </span>
+                        </div>
                       </div>
+
+                      <p className="text-sm text-gray-400 mt-4">
+                        This QR code will expire in {timeLeft} seconds. Please scan it before it expires.
+                      </p>
                     </div>
                   </div>
-                )}
-
-                {/* QR Code Display */}
-                <div className="flex flex-col items-center p-6 bg-white rounded-xl">
-                  <img 
-                    src={qrCode} 
-                    alt="QR Code" 
-                    className="w-48 h-48" 
-                    onLoad={handleQRCodeScan}
-                  />
-                  <p className="mt-4 text-gray-900 text-sm font-medium">Scan to access document</p>
-                  <p className="text-gray-500 text-sm">Time Remaining: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Instructions */}
-          <div className="mt-8 text-center text-gray-400 text-sm">
-            <p>This QR code provides one-time secure access to your document.</p>
-            <p>After scanning, the document can be viewed and printed securely.</p>
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="animate-bounce mb-4">
+                <FaQrcode className="text-6xl text-cyan-500 mx-auto" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                Ready to Generate QR Code
+              </h2>
+              <p className="text-gray-400 mb-8">
+                Click the button below to generate a secure QR code for your document
+              </p>
+              <button
+                onClick={generateQRCode}
+                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg
+                         hover:from-cyan-600 hover:to-purple-600 transition-all duration-300
+                         flex items-center justify-center space-x-2 font-semibold mx-auto"
+              >
+                <FaQrcode className="text-xl" />
+                <span>Generate QR Code</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <Toaster />

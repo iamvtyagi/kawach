@@ -5,6 +5,9 @@ import QRModel from '../models/qrModel.js';
 import { generateQRCode } from '../controllers/qrcodeController.js';
 import FileModel from '../models/fileModel.js';
 import {  deleteFileFromCloudinary } from '../utils/cloudinary.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = Router();
 
@@ -36,7 +39,7 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         await newFile.save();
 
         // Generate QR Code for the file URL
-        const qrCode = await generateQRCode(newFile._id, req.file.path);
+        const qrCode = await generateQRCode(newFile._id, `${process.env.FRONTEND_URL}/print/${newFile._id}`);
 
         res.status(200).send({
             success: true,
