@@ -15,7 +15,7 @@ const GenerateQR = () => {
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
   const [documentInfo, setDocumentInfo] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(60); // 1 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(20); // 1 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const GenerateQR = () => {
       setQrGenerated(true);
       
       // Start the timer
-      setTimeLeft(60);
+      setTimeLeft(20);
       setTimerActive(true);
 
     } catch (error) {
