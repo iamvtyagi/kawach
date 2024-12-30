@@ -40,7 +40,7 @@ const GenerateQR = () => {
       if (fileId && timerActive) { // Only delete if timer is active
         console.log('QR Code expired, deleting file...');
         setTimerActive(false); // Prevent multiple delete calls
-        await axios.delete(`/api/v1/file/delete/${fileId}`, {
+        await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/v1/file/delete/${fileId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -75,7 +75,7 @@ const GenerateQR = () => {
       //  await new Promise(resolve => setTimeout(resolve, 7000));  
 
       // Fetch qr code
-      const res = await axios.get(`/api/v1/file/qrcode/${fileId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/v1/file/qrcode/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

@@ -42,7 +42,7 @@ const Print = () => {
     const fetchFile = async () => {
       try {
         console.log('Fetching file with ID:', fileId);
-        const response = await axios.get(`/api/v1/print/${fileId}`, {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/v1/print/${fileId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

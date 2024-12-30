@@ -63,7 +63,7 @@ const Dashboard = () => {
       formData.append('file', file);
       console.log('FormData created with file');
 
-      const res = await axios.post('/api/v1/file/upload', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/file/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -74,7 +74,7 @@ const Dashboard = () => {
       if (res.data.success) {
         setFile(res.data.fileId);
         toast.success('File uploaded successfully');
-        navigate('/generate-qr'); // Navigate after successful upload   ?????????
+        navigate('/generate-qr'); // Navigate after successful upload   ????????
       } else {
         toast.error(res.data.message);
       }
