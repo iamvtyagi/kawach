@@ -61,9 +61,14 @@ Once your document is saved on their system, there’s a risk that it could be s
 
 ![3](https://github.com/user-attachments/assets/3ee44138-3530-4076-9b8f-b5b43b2a7f89)
 
-![4](https://github.com/user-attachments/assets/0dbd8118-5886-4529-adec-8a9a5a8c4e2e)
+![4](https://github.com/user-attachments/assets/003a036a-e4a9-4fe9-bc66-6762495ff44a)
 
-![5](https://github.com/user-attachments/assets/ee997d6c-0479-4621-8c80-e39631b0a523)
+![5](https://github.com/user-attachments/assets/8e0cd0ea-cf5b-4cec-99ac-7751f51b97ee)
+
+![6](https://github.com/user-attachments/assets/4b80e5c0-421e-4c54-a3b0-55dc4221af32)
+
+![7](https://github.com/user-attachments/assets/235276c5-b80f-449e-8bc3-fb323234d3f7)
+
 
 
 
