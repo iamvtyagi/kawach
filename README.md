@@ -55,11 +55,11 @@ Once your document is saved on their system, there’s a risk that it could be s
 - Once scanned, the QR code expires, ensuring no one else can use it!
 
 ## 📸 Screenshots
-![1](https://github.com/user-attachments/assets/754eac19-581c-4c8e-ad7c-c59e7d07cf75)
+![1](https://github.com/user-attachments/assets/f36e3e14-c0f0-4369-81ca-226ba3f26049)
 
-![2](https://github.com/user-attachments/assets/06775285-2a3d-4e48-9c4a-a0809dddffca)
+![2](https://github.com/user-attachments/assets/6ff627a6-063b-45b1-afdd-3a29484e3bb7)
 
-![3](https://github.com/user-attachments/assets/3ee44138-3530-4076-9b8f-b5b43b2a7f89)
+![3](https://github.com/user-attachments/assets/4d7f7426-42d8-4984-a071-27e94a3befeb)
 
 ![4](https://github.com/user-attachments/assets/003a036a-e4a9-4fe9-bc66-6762495ff44a)
 
