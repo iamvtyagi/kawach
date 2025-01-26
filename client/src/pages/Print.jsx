@@ -12,36 +12,28 @@ const Print = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if fileId exists
     if (!fileId) {
       toast.error('No document selected');
       navigate('/dashboard');
       return;
     }
 
-    // Disable right-click
     const handleContextMenu = (e) => {
       e.preventDefault();
       return false;
     };
 
-    // Disable keyboard shortcuts and dev tools
     const handleKeyDown = (e) => {
-      // Prevent Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Dev Tools)
       if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-          // Prevent Ctrl+S, Ctrl+P, Ctrl+C, Ctrl+V
           (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'c' || e.key === 'v')) ||
-          // Prevent F12
           e.key === 'F12') {
         e.preventDefault();
         return false;
       }
     };
 
-    // Fetch file data
     const fetchFile = async () => {
       try {
-        console.log('Fetching file with ID:', fileId);
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/v1/print/${fileId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -49,7 +41,6 @@ const Print = () => {
         });
 
         if (response.data.success) {
-          console.log('File data received');
           setFileData(response.data.file);
         } else {
           toast.error('Failed to load document');
@@ -64,17 +55,13 @@ const Print = () => {
       }
     };
 
-    // Add event listeners
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
-    
-    // Disable drag and select
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('dragstart', e => e.preventDefault());
 
     fetchFile();
 
-    // Cleanup event listeners
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
@@ -97,20 +84,47 @@ const Print = () => {
         return;
       }
 
+      const currentDate = new Date().toLocaleString();
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
           <title>Print Document</title>
           <style>
-            body { margin: 0; -webkit-print-color-adjust: exact; }
-            img { max-width: 100%; height: auto; }
+            body { 
+              margin: 0; 
+              -webkit-print-color-adjust: exact;
+              position: relative;
+            }
+            .container {
+              position: relative;
+            }
+            img { 
+              max-width: 100%; 
+              height: auto;
+              display: block;
+            }
+            .watermark {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              font-size: 24px;
+              color: rgba(128, 128, 128, 0.3);
+              white-space: nowrap;
+              pointer-events: none;
+              z-index: 1000;
+            }
             @media print {
               body { margin: 0; }
+              .watermark {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
             }
           </style>
           <script>
-            // Block right click and keyboard shortcuts
             document.addEventListener('contextmenu', e => e.preventDefault());
             document.addEventListener('keydown', e => {
               if (e.ctrlKey || e.key === 'F12') e.preventDefault();
@@ -123,23 +137,23 @@ const Print = () => {
 
             function handlePrint() {
               window.print();
-              // Set a timeout to check if printing was cancelled
               setTimeout(() => {
                 handleAfterPrint();
               }, 1000);
             }
 
-            // Listen for the afterprint event
             window.addEventListener('afterprint', handleAfterPrint);
             
-            // If window is closed without printing, redirect
             window.addEventListener('unload', () => {
               window.opener.location.href = '/dashboard';
             });
           </script>
         </head>
         <body>
-          <img src="${fileData.url}" alt="Document" onload="handlePrint();" />
+          <div class="container">
+            <div class="watermark">Printed on ${currentDate}</div>
+            <img src="${fileData.url}" alt="Document" onload="handlePrint();" />
+          </div>
         </body>
         </html>
       `);
