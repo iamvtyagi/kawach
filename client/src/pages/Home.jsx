@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { FaShieldAlt, FaLock, FaUserShield, FaFingerprint } from 'react-icons/fa';
 import Animate from '../components/Animate';
 import logo from '../assets/logo.svg';
+import Testimonials from '../components/Testimonials';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -114,6 +115,9 @@ const Home = () => {
         </div>
       </div>
 
+            <section>
+              <Testimonials/>
+            </section>
       {/* Stats Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid md:grid-cols-3 gap-12">
